@@ -263,6 +263,10 @@ const I18N = {
     vRpcSub: "The proof is intact, but Solana could not be reached to confirm the seal.",
     capture: "Captured",
     captureNote: "Time, place and readings as recorded and signed by the phone.",
+    limitsTitle: "What this proof shows",
+    limitsProvenT: "Proven", limitsProven: "This photo and its readings were signed by the chip of the phone at capture, and Solana dates their hash. Change one pixel and the checks fail.",
+    limitsFlaggedT: "Flagged, not blocked", limitsFlagged: "A position simulated by an app, or a phone clock that disagrees with GPS time, is written into the signed proof and shown as a warning above.",
+    limitsNotT: "Not proven", limitsNot: "That the scene is real. Imprint proves what the phone recorded and when, not whether the scene was staged or the camera pointed at a screen.",
     place: "Place", accuracy: "accuracy", altitude: "Altitude", satellites: "Satellites",
     pressure: "Pressure", baro: "Barometric altitude", light: "Light", sound: "Sound",
     heading: "Heading", tilt: "Tilt", magnetic: "Magnetic field", battery: "Battery temperature",
@@ -360,6 +364,10 @@ const I18N = {
     vRpcSub: "La preuve est intacte, mais Solana n'a pas pu être joint pour confirmer le scellement.",
     capture: "Prise le",
     captureNote: "Heure, lieu et mesures tels qu'enregistrés et signés par le téléphone.",
+    limitsTitle: "Ce que cette preuve montre",
+    limitsProvenT: "Prouvé", limitsProven: "Cette photo et ses mesures ont été signées par la puce du téléphone à la prise, et Solana date leur hash. Un seul pixel changé et les vérifications échouent.",
+    limitsFlaggedT: "Signalé, pas bloqué", limitsFlagged: "Une position simulée par une appli, ou une heure du téléphone qui ne correspond pas à l'heure GPS, est inscrite dans la preuve signée et affichée en avertissement plus haut.",
+    limitsNotT: "Non prouvé", limitsNot: "Que la scène est réelle. Imprint prouve ce que le téléphone a enregistré et quand, pas si la scène a été mise en scène ou si l'objectif visait un écran.",
     place: "Lieu", accuracy: "précision", altitude: "Altitude", satellites: "Satellites",
     pressure: "Pression", baro: "Altitude barométrique", light: "Lumière", sound: "Son",
     heading: "Cap", tilt: "Inclinaison", magnetic: "Champ magnétique", battery: "Température batterie",
@@ -849,6 +857,12 @@ function render(r) {
 
   const side = [solanaCard, hwCard].filter(Boolean);
   root.append(h("div", { class: "grid2" }, readingsCard, side.length ? h("div", { style: "display:grid;gap:16px;align-content:start" }, ...side) : null));
+  // What a green result does and does not mean, so nobody reads more into it than the proof holds.
+  const limit = (color, title, body) => h("p", { style: "margin:10px 0 0" }, h("b", { style: "color:var(--" + color + ")" }, t(title)), h("br"), t(body));
+  root.append(h("div", { class: "card", id: "limits", style: "margin-top:16px" }, h("h4", null, t("limitsTitle")),
+    limit("mint", "limitsProvenT", "limitsProven"),
+    limit("amber", "limitsFlaggedT", "limitsFlagged"),
+    limit("muted", "limitsNotT", "limitsNot")));
   root.classList.add("on");
 }
 
