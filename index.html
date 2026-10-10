@@ -166,6 +166,8 @@ const TREASURY = "ExH22MBBZ3qg3Qg5A4uNicxLJTt1Cs1gBjjKK8XngFtM";
 const TREASURY_SKR = "9dxQMwwcd2d8zBU9DWw8ynHzeNUz95e4QRxiKGgZDakM";
 // Same tolerance as the app: phone clock vs satellite time.
 const CLOCK_TOLERANCE_MS = 2 * 60000;
+// Same threshold as the app: a position measured longer than this before the photo may not be the capture place.
+const STALE_FIX_MS = 2 * 60000;
 const APP_PACKAGE = "fr.chetis.imprint";
 // SHA-256 of the release signing certificate (CN=Imprint, O=Chetis, C=FR).
 const APP_SIGNER = "e04b56896ffec9b1e0d028a94db7c716a225ecfe81ea6f01cb5c46753a5a6ca7";
@@ -239,6 +241,11 @@ const I18N = {
     vMock: "Simulated position",
     vMockSub: "Everything else checks out, but the phone itself reported this position as simulated (a fake-GPS app): the place is not proven.",
     mockPlace: "simulated by an app",
+    vStale: "Old position",
+    vStaleSub: "Everything else checks out, but the phone measured this position {0} before the photo: it may have moved in between. The place is not proven.",
+    stalePlace: "old position",
+    fixSource: "Position source", fixVal: "{0}, measured {1} before the photo",
+    srcGps: "satellites (GPS)", srcNetwork: "Wi-Fi / cell towers", srcFused: "GPS + Wi-Fi",
     vClock: "Capture time doubtful",
     vClockSub: "The phone clock did not match satellite time: the stated capture time is not reliable. Only the Solana block time is guaranteed.",
     clock: "Phone clock", clockOk: "matches satellite time ({0} apart)", clockOff: "off by {0} from satellite time", clockManual: "set by hand", clockUnknown: "not checked (no satellite fix)",
@@ -265,7 +272,7 @@ const I18N = {
     captureNote: "Time, place and readings as recorded and signed by the phone.",
     limitsTitle: "What this proof shows",
     limitsProvenT: "Proven", limitsProven: "This photo and its readings were signed by the chip of the phone at capture, and Solana dates their hash. Change one pixel and the checks fail.",
-    limitsFlaggedT: "Flagged, not blocked", limitsFlagged: "A position simulated by an app, or a phone clock that disagrees with GPS time, is written into the signed proof and shown as a warning above.",
+    limitsFlaggedT: "Flagged, not blocked", limitsFlagged: "A position simulated by an app, a position measured more than 2 minutes before the photo, or a phone clock that disagrees with GPS time, is written into the signed proof and shown as a warning above.",
     limitsNotT: "Not proven", limitsNot: "That the scene is real. Imprint proves what the phone recorded and when, not whether the scene was staged or the camera pointed at a screen. Nor who was holding the phone: the proof names a device, not a person.",
     place: "Place", accuracy: "accuracy", altitude: "Altitude", satellites: "Satellites",
     pressure: "Pressure", baro: "Barometric altitude", light: "Light", sound: "Sound",
@@ -284,7 +291,7 @@ const I18N = {
     verified: "verified", selfSigned: "self-signed", unverified: "unverified", failed: "failed",
     howTitle: "What is checked",
     how1t: "The photo", how1: "Its SHA-256 fingerprint must match the one signed at capture.",
-    how2t: "The readings", how2: "Time, GPS, compass, barometer, light, sound, motion, NFC and Bluetooth are hashed together with the photo. The phone also records whether the GPS position was simulated.",
+    how2t: "The readings", how2: "Time, GPS, compass, barometer, light, sound, motion, NFC and Bluetooth are hashed together with the photo. The phone also records whether the GPS position was simulated, and how long before the photo it was measured.",
     how3t: "The phone signature", how3: "The secure chip of the phone signs that hash. The private key never leaves the chip.",
     how4t: "The chip itself", how4: "A certificate chain signed by Google proves the key lives in real phone hardware, was created by the official Imprint app on an unmodified phone, and was not revoked.",
     how5t: "The Solana seal", how5: "The hash is written in a Solana memo. The block time proves the photo existed no later than that moment.",
@@ -340,6 +347,11 @@ const I18N = {
     vMock: "Position simulée",
     vMockSub: "Tout le reste est vérifié, mais le téléphone lui-même a signalé cette position comme simulée (app de faux GPS) : le lieu n'est pas prouvé.",
     mockPlace: "simulée par une app",
+    vStale: "Position ancienne",
+    vStaleSub: "Tout le reste est vérifié, mais le téléphone a mesuré cette position {0} avant la photo : il a pu bouger entre-temps. Le lieu n'est pas prouvé.",
+    stalePlace: "position ancienne",
+    fixSource: "Source de la position", fixVal: "{0}, mesurée {1} avant la photo",
+    srcGps: "satellites (GPS)", srcNetwork: "Wi-Fi / antennes", srcFused: "GPS + Wi-Fi",
     vClock: "Heure de prise douteuse",
     vClockSub: "L'horloge du téléphone ne correspondait pas à l'heure des satellites : l'heure de prise déclarée n'est pas fiable. Seule la date du bloc Solana est garantie.",
     clock: "Horloge du téléphone", clockOk: "à l'heure des satellites (écart {0})", clockOff: "décalée de {0} par rapport aux satellites", clockManual: "réglée à la main", clockUnknown: "non vérifiée (pas de signal satellite)",
@@ -366,7 +378,7 @@ const I18N = {
     captureNote: "Heure, lieu et mesures tels qu'enregistrés et signés par le téléphone.",
     limitsTitle: "Ce que cette preuve montre",
     limitsProvenT: "Prouvé", limitsProven: "Cette photo et ses mesures ont été signées par la puce du téléphone à la prise, et Solana date leur hash. Un seul pixel changé et les vérifications échouent.",
-    limitsFlaggedT: "Signalé, pas bloqué", limitsFlagged: "Une position simulée par une appli, ou une heure du téléphone qui ne correspond pas à l'heure GPS, est inscrite dans la preuve signée et affichée en avertissement plus haut.",
+    limitsFlaggedT: "Signalé, pas bloqué", limitsFlagged: "Une position simulée par une appli, une position mesurée plus de 2 minutes avant la photo, ou une heure du téléphone qui ne correspond pas à l'heure GPS, est inscrite dans la preuve signée et affichée en avertissement plus haut.",
     limitsNotT: "Non prouvé", limitsNot: "Que la scène est réelle. Imprint prouve ce que le téléphone a enregistré et quand, pas si la scène a été mise en scène ou si l'objectif visait un écran. Ni qui tenait le téléphone : la preuve désigne un appareil, pas une personne.",
     place: "Lieu", accuracy: "précision", altitude: "Altitude", satellites: "Satellites",
     pressure: "Pression", baro: "Altitude barométrique", light: "Lumière", sound: "Son",
@@ -385,7 +397,7 @@ const I18N = {
     verified: "vérifié", selfSigned: "auto-signé", unverified: "non vérifié", failed: "échec",
     howTitle: "Ce qui est vérifié",
     how1t: "La photo", how1: "Son empreinte SHA-256 doit correspondre à celle signée au moment de la prise.",
-    how2t: "Les mesures", how2: "Heure, GPS, boussole, baromètre, lumière, son, mouvement, NFC et Bluetooth sont hachés avec la photo. Le téléphone note aussi si la position GPS était simulée.",
+    how2t: "Les mesures", how2: "Heure, GPS, boussole, baromètre, lumière, son, mouvement, NFC et Bluetooth sont hachés avec la photo. Le téléphone note aussi si la position GPS était simulée, et combien de temps avant la photo elle a été mesurée.",
     how3t: "La signature du téléphone", how3: "La puce sécurisée du téléphone signe cette empreinte. La clé privée ne quitte jamais la puce.",
     how4t: "La puce elle-même", how4: "Une chaîne de certificats signée par Google prouve que la clé vit dans le matériel d'un vrai téléphone, qu'elle a été créée par l'app Imprint officielle sur un téléphone non modifié, et qu'elle n'a pas été révoquée.",
     how5t: "Le sceau Solana", how5: "L'empreinte est inscrite dans un mémo Solana. La date du bloc prouve que la photo existait au plus tard à ce moment.",
@@ -739,6 +751,7 @@ function render(r) {
   else if (checks.chain.ok !== true) v = ["v-warn", "!", t("vUnsealed"), t("vUnsealedSub")];
   else if (chainInfo.network !== "mainnet") v = ["v-warn", "!", t("vDevnet"), t("vDevnetSub")];
   else if (payload.loc && payload.loc.mock === true) v = ["v-warn", "!", t("vMock"), t("vMockSub")];
+  else if (staleFix(payload)) v = ["v-warn", "!", t("vStale"), t("vStaleSub", dur(payload.loc.age_ms / 1000))];
   else if (clockOff(payload)) v = ["v-warn", "!", t("vClock"), t("vClockSub")];
   else if (checks.attestation.ok === true) v = ["v-ok", "✓", t("vAuth"), t("vAuthSub", sealedAt)];
   else v = ["v-warn", "!", t("vIntact"), t("vIntactSub", sealedAt)];
@@ -770,8 +783,16 @@ function render(r) {
     ? h("span", null, h("span", { class: "mono" }, loc.lat.toFixed(5) + ", " + loc.lon.toFixed(5)),
         isNum(loc.acc) ? " (" + t("accuracy") + " ±" + num(loc.acc, 0) + " m) · " : " · ",
         loc.mock === true ? h("b", { class: "fail-t" }, "⚠ " + t("mockPlace") + " · ") : null,
+        staleFix(payload) ? h("b", { class: "warn-t" }, "⚠ " + t("stalePlace") + " · ") : null,
         link("https://www.openstreetmap.org/?mlat=" + loc.lat + "&mlon=" + loc.lon + "#map=17/" + loc.lat + "/" + loc.lon, t("map")))
     : null;
+  // How long before the shutter the position was measured, and by what (absent from proofs made before it was signed).
+  let fixRow = null;
+  if (loc && isNum(loc.age_ms)) {
+    const src = { gps: t("srcGps"), network: t("srcNetwork"), fused: t("srcFused") }[loc.src] || (typeof loc.src === "string" ? loc.src.slice(0, 24) : "?");
+    const text = t("fixVal", src, loc.age_ms < 1000 ? "< 1 s" : dur(loc.age_ms / 1000));
+    fixRow = staleFix(payload) ? h("b", { class: "warn-t" }, "⚠ " + text) : h("span", { class: "ok-t" }, text);
+  }
   const clk = payload.clock || null;
   let clockRow = null;
   if (clk) {
@@ -787,6 +808,7 @@ function render(r) {
     [t("capture"), isNum(payload.t) ? fmtDate(payload.t) : null],
     [t("clock"), clockRow],
     [t("place"), place],
+    [t("fixSource"), fixRow],
     [t("altitude"), loc && isNum(loc.alt) ? num(loc.alt) + " m" : null],
     [t("satellites"), loc && isNum(loc.sats) ? String(loc.sats) : null],
     [t("pressure"), isNum(env.hpa) ? num(env.hpa, 2) + " hPa" : null],
@@ -867,6 +889,11 @@ function render(r) {
 }
 
 /* ---------- Wiring ---------- */
+
+function staleFix(payload) {
+  const age = payload.loc && payload.loc.age_ms;
+  return isNum(age) && age > STALE_FIX_MS;
+}
 
 function clockOff(payload) {
   const skew = payload.clock && payload.clock.gnss_skew_ms;
