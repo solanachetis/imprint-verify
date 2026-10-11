@@ -1,0 +1,30 @@
+# Refreshes Google's key attestation revocation list (revocations.json) every day, so a chip key Google revokes
+# stops passing the verifier within a day. Lives at the root of the public imprint-verify repo; this copy in the
+# app repo is inert. No third-party action: plain git and Python on the runner.
+name: Refresh revocation list
+
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: revocations
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out
+        run: git clone --depth 1 "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" .
+      - name: Fetch Google's list
+        run: python3 update-revocations.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add revocations.json
+          git diff --cached --quiet || { git commit -m "Refresh Google's attestation revocation list"; git push; }
