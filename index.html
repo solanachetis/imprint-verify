@@ -285,6 +285,9 @@ const I18N = {
     vUnsealedSub: "The proof is intact but not written on Solana, so its date is not guaranteed.",
     vNoPhoto: "Photo missing",
     vNoPhotoSub: "The proof itself is valid. Add the photo to finish the check.",
+    vTap: "Genuine proof, photo not checked",
+    vTapSub: "This proof came by tap from a Seeker. Its readings were signed by the chip of a real phone and sealed on Solana{0}. The photo itself stayed on that Seeker: to check the picture too, ask for the photo file and add it here.",
+    tapBad: "This tap link is damaged or incomplete. Hold the phone against the Seeker again, a little longer.",
     vFail: "Not authentic",
     vFailSub: "Something was changed or does not match. Details below.",
     vRpc: "Seal not checked yet",
@@ -405,6 +408,9 @@ const I18N = {
     vUnsealedSub: "La preuve est intacte mais n'est pas inscrite sur Solana : sa date n'est donc pas garantie.",
     vNoPhoto: "Photo manquante",
     vNoPhotoSub: "La preuve elle-même est valide. Ajoutez la photo pour terminer la vérification.",
+    vTap: "Preuve authentique, photo non vérifiée",
+    vTapSub: "Cette preuve vient d'un Seeker, par contact. Ses mesures ont été signées par la puce d'un vrai téléphone et scellées sur Solana{0}. La photo elle-même est restée sur ce Seeker : pour vérifier aussi l'image, demandez le fichier photo et ajoutez-le ici.",
+    tapBad: "Ce lien reçu par contact est abîmé ou incomplet. Approchez de nouveau le téléphone du Seeker, un peu plus longtemps.",
     vFail: "Non authentique",
     vFailSub: "Quelque chose a été modifié ou ne correspond pas. Détails ci-dessous.",
     vRpc: "Scellement pas encore vérifié",
@@ -739,8 +745,10 @@ async function checkChain(solana, payloadHash) {
 
 /* ---------- Verification ---------- */
 
+const isJson = (f) => /\.json$/i.test(f.name) || f.type === "application/json";
+
 async function verify(files) {
-  const jsonFile = files.find((f) => /\.json$/i.test(f.name) || f.type === "application/json");
+  const jsonFile = files.find(isJson);
   if (!jsonFile) throw new Error(t("needJson"));
   let proof;
   try { proof = JSON.parse(await jsonFile.text()); } catch (_) { throw new Error(t("badJson")); }
@@ -831,9 +839,11 @@ function render(r) {
   // Readings only mean something when a certified chip signed them; otherwise anyone could have typed them.
   const proven = checks.attestation.ok === true;
   // "Authentic" only when every check passed, on mainnet. Anything unproven is amber, never green.
+  // A proof shown by tap arrives without its photo (it stays on the Seeker): judge the rest, never green.
+  const tapNoPhoto = r.viaTap && checks.photo.ok === null;
   let v;
   if (Object.values(checks).some((c) => c.ok === false)) v = ["v-fail", "✕", t("vFail"), t("vFailSub")];
-  else if (checks.photo.ok === null) v = ["v-warn", "!", t("vNoPhoto"), t("vNoPhotoSub")];
+  else if (checks.photo.ok === null && !tapNoPhoto) v = ["v-warn", "!", t("vNoPhoto"), t("vNoPhotoSub")];
   else if (checks.chain.kind === "rpc") v = ["v-warn", "…", t("vRpc"), t("vRpcSub")];
   else if (checks.chain.kind === "notfound") v = ["v-warn", "?", t("vNotFound"), t("vNotFoundSub")];
   else if (checks.chain.ok !== true) v = ["v-warn", "!", t("vUnsealed"), t("vUnsealedSub")];
@@ -846,6 +856,7 @@ function render(r) {
   else if (clockOff(payload)) v = ["v-warn", "!", t("vClock"), t("vClockSub")];
   else if (clockUnchecked(payload)) v = ["v-warn", "!", t("vClockManual"), t("vClockManualSub")];
   else if (chainInfo.custom) v = ["v-warn", "!", t("vCustom"), t("vCustomSub", chainInfo.rpc)];
+  else if (tapNoPhoto) v = ["v-warn", "✓", t("vTap"), t("vTapSub", sealedAt)];
   else v = ["v-ok", "✓", t("vAuth"), t("vAuthSub", sealedAt)];
   root.append(h("div", { class: "verdict " + v[0] }, h("div", { class: "ico", "aria-hidden": "true" }, v[1]), h("div", null, h("h3", null, v[2]), h("p", null, v[3]))));
 
@@ -1027,8 +1038,12 @@ const status = document.getElementById("status");
 // Inside another site's frame, a fake banner could be drawn over the real result: refuse to verify there.
 const framed = (() => { try { return window.top !== window.self; } catch (_) { return true; } })();
 
+// Proof received by tap, kept so the photo can be added afterwards to finish the check.
+let tapProof = null;
+
 async function run(files) {
   if (framed) return;
+  if (tapProof && !files.some(isJson)) files = [tapProof, ...files];
   const id = ++runId;
   status.className = "";
   status.textContent = t("checking");
@@ -1037,6 +1052,7 @@ async function run(files) {
   try {
     const report = await verify(files);
     if (id !== runId) return;
+    report.viaTap = files.includes(tapProof);
     if (lastShownUrl) URL.revokeObjectURL(lastShownUrl);
     report.photoUrl = lastShownUrl = report.photo ? URL.createObjectURL(report.photo) : null;
     lastReport = report;
@@ -1094,7 +1110,43 @@ async function loadSample() {
 sampleBtn.addEventListener("click", loadSample);
 fetch("samples/manifest.json", { method: "HEAD", cache: "no-store" }).then((r) => { if (r.ok) sampleBtn.hidden = false; }).catch(() => {});
 
+/* ---------- "Show by tap": a Seeker held against this phone opens …#p1=<proof> ---------- */
+// The part after '#' never reaches the server. The app packs the proof JSON with zlib, then base64url.
+const TAP_MAX = 64 * 1024;
+async function readTapLink() {
+  const m = /^#p1=([A-Za-z0-9_-]{1,40000})$/.exec(location.hash);
+  if (!m || framed) return;
+  // Out of the address bar and the history: the proof can hold an exact position.
+  history.replaceState(null, "", location.pathname + location.search);
+  let file;
+  try {
+    const b = m[1].replace(/-/g, "+").replace(/_/g, "/");
+    const packed = Uint8Array.from(atob(b + "===".slice((b.length + 3) % 4)), (c) => c.charCodeAt(0));
+    const reader = new Blob([packed]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
+    const parts = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > TAP_MAX) throw new Error("too big");
+      parts.push(value);
+    }
+    const text = await new Blob(parts).text();
+    const name = String(JSON.parse(text).photo_file || "imprint").replace(/\.[^.]*$/, "");
+    file = new File([text], name + ".proof.json", { type: "application/json" });
+  } catch (_) {
+    status.className = "err";
+    status.textContent = t("tapBad");
+    return;
+  }
+  tapProof = file;
+  run([file]);
+}
+window.addEventListener("hashchange", readTapLink);
+
 applyLang();
+readTapLink();
 if (framed) {
   const url = location.origin + location.pathname;
   document.querySelector("main").replaceChildren(h("p", { class: "card", style: "margin-top:28px" },
