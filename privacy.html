@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Imprint Privacy Policy</title>
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<main>
+<p class="brand">Imprint</p>
+<h1>Privacy Policy</h1>
+<p class="meta">Effective 10 November 2026 · Applies to the Imprint Android app (<code>fr.chetis.imprint</code>) and the Imprint web verifier.</p>
+
+<section class="short">
+<h2>The short version</h2>
+<ul>
+<li>Imprint has no account, no ads, no analytics and no server of its own.</li>
+<li>Your photos, your position and your sensor readings stay on your phone.</li>
+<li>When you seal a photo, only its fingerprint (a SHA-256 hash) is written on Solana. It does not reveal the photo or the place.</li>
+<li>Seals and fees are public Solana transactions. They are permanent: nobody can delete them, including us.</li>
+<li>When you export a proof, it contains your exact position. You decide who gets it.</li>
+</ul>
+</section>
+
+<h2>1. Who we are</h2>
+<p>Imprint is developed by SolanaChetis ("we"). Contact: <a href="mailto:solanachetis@gmail.com">solanachetis@gmail.com</a>.</p>
+<p>We do not receive your photos, positions or sensor readings. The only information we can see is what anyone can see on the Solana blockchain (see section 4).</p>
+
+<h2>2. What Imprint reads on your phone, and why</h2>
+<p>Imprint asks for these permissions when you tap "Wake up the sensors" on the welcome screen. You can refuse any of them, or revoke them later in Android settings; the related reading is then left out of your imprints.</p>
+<table>
+<thead><tr><th>Permission</th><th>What it is used for</th></tr></thead>
+<tbody>
+<tr><td>Camera</td><td>Taking the photo you imprint.</td></tr>
+<tr><td>Precise location</td><td>Recording where the photo was taken (latitude, longitude, accuracy, satellites, how old the position fix was, and whether it came from GPS or the network). Imprint also flags a simulated position. Location is only read while the app is open; there is no background location.</td></tr>
+<tr><td>Microphone</td><td>Measuring the sound level in decibels at the moment of the photo. No audio is recorded or saved.</td></tr>
+<tr><td>Physical activity</td><td>Reading the step counter.</td></tr>
+<tr><td>Nearby devices (Bluetooth)</td><td>Counting the Bluetooth devices around you. Only the number is kept: no names, no addresses. It is never used to find your location.</td></tr>
+<tr><td>NFC</td><td>Reading a tag you choose to tap: its ID, type and a short text or link it carries.</td></tr>
+<tr><td>Notifications</td><td>One surprise reminder a day, the "Moment of the day". You can turn it off in Wallet › Settings.</td></tr>
+<tr><td>Biometrics</td><td>Unlocking your vault with your fingerprint (or your screen lock PIN). Android checks it; Imprint never sees it.</td></tr>
+<tr><td>Internet</td><td>Talking to the Solana network (section 4).</td></tr>
+</tbody>
+</table>
+<p>Imprint also reads sensors that need no permission: barometer, compass, light, motion, proximity and battery temperature.</p>
+
+<h2>3. Where your data is stored</h2>
+<ul>
+<li>Imprints (photo + readings + signature) are saved in Imprint's private storage on your phone, protected by Android's device encryption. If your phone has a screen lock, opening the vault needs your fingerprint or your PIN.</li>
+<li>The signing key is created inside your phone's secure chip (StrongBox, or the phone's trusted environment if it has no StrongBox) and cannot be copied out of it.</li>
+<li>Imprint's data is excluded from Android cloud backups.</li>
+<li>You can delete any imprint in the app. Uninstalling Imprint deletes all of them. A seal already written on Solana stays there, but without the original photo it no longer proves anything.</li>
+</ul>
+
+<h2>4. What leaves your phone</h2>
+<h3>Your wallet</h3>
+<p>When you connect a wallet (for example Seed Vault), Imprint talks to that wallet app through Mobile Wallet Adapter. The wallet receives Imprint's name, web address and icon; it may download that icon from GitHub. Your wallet shares your public wallet address with Imprint. Your keys never leave the wallet.</p>
+<h3>The Solana network</h3>
+<p>To show your balances, check for a Seeker Genesis Token, prepare a seal and confirm it, Imprint sends requests to a Solana RPC provider: <code>api.mainnet-beta.solana.com</code>, <code>api.devnet.solana.com</code> on devnet, or an address you enter yourself in the settings. These requests include your public wallet address. The provider can see your IP address; its own privacy policy applies.</p>
+<h3>When you seal</h3>
+<p>Your wallet signs and sends a Solana transaction that contains a memo <code>imprint:v1:sha256:&lt;fingerprint&gt;</code> and the fee (shown before you sign). This transaction is public and permanent: anyone can see that your wallet address sealed a fingerprint at that time, and which fee it paid. The fingerprint alone does not reveal the photo, the place or the readings. Part of the fee goes to Imprint's wallet, so we see the same public transactions as everyone else.</p>
+<h3>When you export or share a proof</h3>
+<p>Only you start an export, and you choose where it goes (an app, a contact, your Downloads folder). A proof file contains everything needed to check it:</p>
+<ul>
+<li>the photo;</li>
+<li>your exact position, its accuracy, its age and its source;</li>
+<li>the time, and all sensor readings listed above, including the NFC tag ID and text and the number of Bluetooth devices;</li>
+<li>your phone model and Android version;</li>
+<li>the public key of your phone's signing key and its attestation certificates;</li>
+<li>your public wallet address and the seal transaction.</li>
+</ul>
+<p>Anyone who receives a proof can read all of this. Share it only with people you trust with that place and time.</p>
+<h3>Links you open</h3>
+<p>Transaction links open Solana Explorer in your browser.</p>
+
+<h2>5. The web verifier</h2>
+<p>The Imprint web verifier (<a href="https://solanachetis.github.io/imprint-verify/">solanachetis.github.io/imprint-verify</a>) checks a proof entirely in your browser. The photo and proof file are not uploaded anywhere. To check the seal, the page asks a Solana RPC provider (Helius, or PublicNode as a fallback, or an address you enter) about the seal transaction. The page is hosted on GitHub Pages; GitHub and the RPC provider can see your IP address.</p>
+
+<h2>6. What we never do</h2>
+<ul>
+<li>No account, no sign-up, no email collection in the app.</li>
+<li>No analytics, tracking or advertising SDK.</li>
+<li>No selling or sharing of your data: we do not have it.</li>
+<li>No recording of audio, and no background location.</li>
+</ul>
+
+<h2>7. Children</h2>
+<p>Imprint uses a crypto wallet and is not intended for people under 18. We do not knowingly collect data from children; in fact Imprint sends us no personal data at all.</p>
+
+<h2>8. Your choices and rights</h2>
+<p>Your imprints are on your phone: you can view, export and delete them at any time. Data written on Solana cannot be changed or deleted by anyone. For any question about your privacy, write to <a href="mailto:solanachetis@gmail.com">solanachetis@gmail.com</a>. If you live in the European Union, you can also contact your data protection authority (in France, the CNIL).</p>
+
+<h2>9. Changes</h2>
+<p>If this policy changes, the new version is published at this address with a new effective date.</p>
+
+<p class="foot">© 2026 SolanaChetis · <a href="terms.html">Terms of use</a></p>
+</main>
+</body>
+</html>
