@@ -73,9 +73,23 @@
   .checks .why { color: var(--muted); font-size: 14px; }
   .checks .detail { font-size: 13px; margin-top: 4px; }
   .s-fail .detail { color: var(--danger); } .s-warn .detail, .s-none .detail { color: var(--amber); }
-  dl.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 14px; }
+  /* The label column never takes more than 45%: on a phone a long label used to squeeze values letter by letter. */
+  dl.kv { display: grid; grid-template-columns: fit-content(45%) minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 14px; }
   dl.kv dt { color: var(--muted); }
   dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+  @media (max-width: 520px) {
+    dl.kv { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
+    dl.kv dd { margin-bottom: 10px; }
+  }
+  /* Readings, Solana, chip and limits fold away under the verdict; one tap opens each. */
+  details.fold { margin-top: 12px; padding: 0; }
+  details.fold > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 16px 20px; color: var(--text); font-size: 15px; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary h4 { margin: 0; }
+  details.fold > summary::after { content: "›"; margin-left: auto; color: var(--muted); font-size: 22px; line-height: 1; transition: transform .15s; }
+  details.fold[open] > summary::after { transform: rotate(90deg); }
+  details.fold > .body { padding: 0 20px 18px; }
+  .linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--cyan); cursor: pointer; text-decoration: underline; }
   .mono { font-family: var(--mono); font-size: 13px; }
   .card h4 { margin: 0 0 14px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
   .card h4 .tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--outline); border-radius: 999px; padding: 1px 8px; }
@@ -128,14 +142,17 @@
 
     <section id="results" aria-live="polite"></section>
 
-    <h2 data-i18n="howTitle"></h2>
-    <ol class="steps">
-      <li class="card"><b data-i18n="how1t"></b><span data-i18n="how1"></span></li>
-      <li class="card"><b data-i18n="how2t"></b><span data-i18n="how2"></span></li>
-      <li class="card"><b data-i18n="how3t"></b><span data-i18n="how3"></span></li>
-      <li class="card"><b data-i18n="how4t"></b><span data-i18n="how4"></span></li>
-      <li class="card"><b data-i18n="how5t"></b><span data-i18n="how5"></span></li>
-    </ol>
+    <!-- Explains the five checks before a proof is dropped; hidden once a result shows them. -->
+    <section id="how">
+      <h2 data-i18n="howTitle"></h2>
+      <ol class="steps">
+        <li class="card"><b data-i18n="how1t"></b><span data-i18n="how1"></span></li>
+        <li class="card"><b data-i18n="how2t"></b><span data-i18n="how2"></span></li>
+        <li class="card"><b data-i18n="how3t"></b><span data-i18n="how3"></span></li>
+        <li class="card"><b data-i18n="how4t"></b><span data-i18n="how4"></span></li>
+        <li class="card"><b data-i18n="how5t"></b><span data-i18n="how5"></span></li>
+      </ol>
+    </section>
     <p class="note" data-i18n="privacy"></p>
 
     <details>
@@ -285,9 +302,6 @@ const I18N = {
     vUnsealedSub: "The proof is intact but not written on Solana, so its date is not guaranteed.",
     vNoPhoto: "Photo missing",
     vNoPhotoSub: "The proof itself is valid. Add the photo to finish the check.",
-    vTap: "Genuine proof, photo not checked",
-    vTapSub: "This proof came by tap from a Seeker. Its readings were signed by the chip of a real phone and sealed on Solana{0}. The photo itself stayed on that Seeker: to check the picture too, ask for the photo file and add it here.",
-    tapBad: "This tap link is damaged or incomplete. Hold the phone against the Seeker again, a little longer.",
     vFail: "Not authentic",
     vFailSub: "Something was changed or does not match. Details below.",
     vRpc: "Seal not checked yet",
@@ -304,7 +318,7 @@ const I18N = {
     accel: "Acceleration", gyro: "Rotation", steps: "Steps since boot", ble: "Bluetooth devices nearby",
     nfc: "NFC tag", device: "Device", wallet: "Wallet", seeker: "Seeker Genesis Token",
     moment: "Moment of the day", momentVal: "captured {0} after the notification",
-    yes: "yes", no: "no", map: "map",
+    yes: "yes", no: "no", map: "map", showPlace: "Show the place",
     readings: "Readings", solana: "Solana", hardware: "Phone chip",
     network: "Network", block: "Block", blockTime: "Block time", signer: "Signed by",
     delay: "Sealed", delayVal: "{0} after capture", delayBefore: "Phone clock {0} ahead of the block",
@@ -408,9 +422,6 @@ const I18N = {
     vUnsealedSub: "La preuve est intacte mais n'est pas inscrite sur Solana : sa date n'est donc pas garantie.",
     vNoPhoto: "Photo manquante",
     vNoPhotoSub: "La preuve elle-même est valide. Ajoutez la photo pour terminer la vérification.",
-    vTap: "Preuve authentique, photo non vérifiée",
-    vTapSub: "Cette preuve vient d'un Seeker, par contact. Ses mesures ont été signées par la puce d'un vrai téléphone et scellées sur Solana{0}. La photo elle-même est restée sur ce Seeker : pour vérifier aussi l'image, demandez le fichier photo et ajoutez-le ici.",
-    tapBad: "Ce lien reçu par contact est abîmé ou incomplet. Approchez de nouveau le téléphone du Seeker, un peu plus longtemps.",
     vFail: "Non authentique",
     vFailSub: "Quelque chose a été modifié ou ne correspond pas. Détails ci-dessous.",
     vRpc: "Scellement pas encore vérifié",
@@ -427,7 +438,7 @@ const I18N = {
     accel: "Accélération", gyro: "Rotation", steps: "Pas depuis le démarrage", ble: "Appareils Bluetooth proches",
     nfc: "Tag NFC", device: "Appareil", wallet: "Wallet", seeker: "Seeker Genesis Token",
     moment: "Moment du jour", momentVal: "prise {0} après la notification",
-    yes: "oui", no: "non", map: "carte",
+    yes: "oui", no: "non", map: "carte", showPlace: "Afficher le lieu",
     readings: "Mesures", solana: "Solana", hardware: "Puce du téléphone",
     network: "Réseau", block: "Bloc", blockTime: "Date du bloc", signer: "Signée par",
     delay: "Scellée", delayVal: "{0} après la prise", delayBefore: "Horloge du téléphone en avance de {0}",
@@ -745,10 +756,8 @@ async function checkChain(solana, payloadHash) {
 
 /* ---------- Verification ---------- */
 
-const isJson = (f) => /\.json$/i.test(f.name) || f.type === "application/json";
-
 async function verify(files) {
-  const jsonFile = files.find(isJson);
+  const jsonFile = files.find((f) => /\.json$/i.test(f.name) || f.type === "application/json");
   if (!jsonFile) throw new Error(t("needJson"));
   let proof;
   try { proof = JSON.parse(await jsonFile.text()); } catch (_) { throw new Error(t("badJson")); }
@@ -839,11 +848,9 @@ function render(r) {
   // Readings only mean something when a certified chip signed them; otherwise anyone could have typed them.
   const proven = checks.attestation.ok === true;
   // "Authentic" only when every check passed, on mainnet. Anything unproven is amber, never green.
-  // A proof shown by tap arrives without its photo (it stays on the Seeker): judge the rest, never green.
-  const tapNoPhoto = r.viaTap && checks.photo.ok === null;
   let v;
   if (Object.values(checks).some((c) => c.ok === false)) v = ["v-fail", "✕", t("vFail"), t("vFailSub")];
-  else if (checks.photo.ok === null && !tapNoPhoto) v = ["v-warn", "!", t("vNoPhoto"), t("vNoPhotoSub")];
+  else if (checks.photo.ok === null) v = ["v-warn", "!", t("vNoPhoto"), t("vNoPhotoSub")];
   else if (checks.chain.kind === "rpc") v = ["v-warn", "…", t("vRpc"), t("vRpcSub")];
   else if (checks.chain.kind === "notfound") v = ["v-warn", "?", t("vNotFound"), t("vNotFoundSub")];
   else if (checks.chain.ok !== true) v = ["v-warn", "!", t("vUnsealed"), t("vUnsealedSub")];
@@ -856,7 +863,6 @@ function render(r) {
   else if (clockOff(payload)) v = ["v-warn", "!", t("vClock"), t("vClockSub")];
   else if (clockUnchecked(payload)) v = ["v-warn", "!", t("vClockManual"), t("vClockManualSub")];
   else if (chainInfo.custom) v = ["v-warn", "!", t("vCustom"), t("vCustomSub", chainInfo.rpc)];
-  else if (tapNoPhoto) v = ["v-warn", "✓", t("vTap"), t("vTapSub", sealedAt)];
   else v = ["v-ok", "✓", t("vAuth"), t("vAuthSub", sealedAt)];
   root.append(h("div", { class: "verdict " + v[0] }, h("div", { class: "ico", "aria-hidden": "true" }, v[1]), h("div", null, h("h3", null, v[2]), h("p", null, v[3]))));
 
@@ -882,13 +888,20 @@ function render(r) {
 
   // Readings
   const loc = payload.loc || null, env = payload.env || {}, motion = payload.motion || {}, nfc = payload.nfc || null, device = payload.device || {};
-  const place = loc && isNum(loc.lat) && isNum(loc.lon)
-    ? h("span", null, h("span", { class: "mono" }, loc.lat.toFixed(5) + ", " + loc.lon.toFixed(5)),
-        isNum(loc.acc) ? " (" + t("accuracy") + " ±" + num(loc.acc, 0) + " m) · " : " · ",
-        loc.mock === true ? h("b", { class: "fail-t" }, "⚠ " + t("mockPlace") + " · ") : null,
-        staleFix(payload) ? h("b", { class: "warn-t" }, "⚠ " + t("stalePlace") + " · ") : null,
-        link("https://www.openstreetmap.org/?mlat=" + loc.lat + "&mlon=" + loc.lon + "#map=17/" + loc.lat + "/" + loc.lon, t("map")))
-    : null;
+  // The coordinates and map link wait behind a button, so a screen shown or shared doesn't give the place away.
+  // Warnings about the position stay visible: they are part of the verdict.
+  let place = null;
+  if (loc && isNum(loc.lat) && isNum(loc.lon)) {
+    const exact = h("span", null, h("span", { class: "mono" }, loc.lat.toFixed(5) + ", " + loc.lon.toFixed(5)),
+      isNum(loc.acc) ? " (" + t("accuracy") + " ±" + num(loc.acc, 0) + " m) · " : " · ",
+      link("https://www.openstreetmap.org/?mlat=" + loc.lat + "&mlon=" + loc.lon + "#map=17/" + loc.lat + "/" + loc.lon, t("map")));
+    const reveal = h("button", { type: "button", class: "linkbtn" }, t("showPlace"));
+    reveal.addEventListener("click", () => reveal.replaceWith(exact));
+    place = h("span", null,
+      loc.mock === true ? h("b", { class: "fail-t" }, "⚠ " + t("mockPlace") + " · ") : null,
+      staleFix(payload) ? h("b", { class: "warn-t" }, "⚠ " + t("stalePlace") + " · ") : null,
+      reveal);
+  }
   // How long before the shutter the position was measured, and by what (absent from proofs made before it was signed).
   let fixRow = null;
   if (loc && isNum(loc.age_ms)) {
@@ -908,7 +921,7 @@ function render(r) {
   }
   const sealSigners = chainInfo && chainInfo.confirmed ? chainInfo.signers || [] : null;
   const walletSigned = typeof payload.wallet === "string" && sealSigners ? sealSigners.includes(payload.wallet) : null;
-  const readings = kv([
+  const readingRows = [
     [t("capture"), isNum(payload.t) ? fmtDate(payload.t) : null],
     [t("clock"), clockRow],
     [t("place"), place],
@@ -935,11 +948,18 @@ function render(r) {
       ? (!payload.sgt ? t("no") : walletSigned === false ? h("span", { class: "warn-t" }, t("seekerUnproven")) : t("yes")) : null],
     [t("moment"), payload.moment && isNum(payload.moment.delay_s)
       ? (payload.moment.manual === true ? t("momentManual") : t("momentVal", dur(payload.moment.delay_s))) : null],
-  ]);
+  ];
+  const readings = kv(readingRows);
+  const readingCount = readingRows.filter(([, v]) => v != null && v !== "").length;
+  // A folded card: the title (and its tags) in the summary, the content one tap away.
+  const fold = (title, tags, body, attrs) => h("details", { class: "card fold", ...attrs },
+    h("summary", null, h("h4", null, title, ...tags)), h("div", { class: "body" }, ...body));
+  const countTag = h("span", { class: "tag" }, String(readingCount));
+  // Opened by itself when the verdict is not green, so the flagged rows are in sight.
   const readingsCard = proven
-    ? h("div", { class: "card" }, h("h4", null, t("readings")), readings, h("p", { class: "note" }, t("captureNote")))
-    : h("div", { class: "card" }, h("h4", null, t("readings"), h("span", { class: "tag", style: "color:var(--amber);border-color:#5c4416" }, t("declared"))), readings,
-        h("p", { class: "note warn-t" }, t("declaredNote")));
+    ? fold(t("readings"), [countTag], [readings, h("p", { class: "note" }, t("captureNote"))], { open: v[0] !== "v-ok" ? "" : null })
+    : fold(t("readings"), [h("span", { class: "tag", style: "color:var(--amber);border-color:#5c4416" }, t("declared")), countTag],
+        [readings, h("p", { class: "note warn-t" }, t("declaredNote"))], { open: "" });
 
   // Solana
   let solanaCard = null;
@@ -949,7 +969,7 @@ function render(r) {
       const d = chainInfo.blockTime - payload.t / 1000;
       delay = d >= -60 ? t("delayVal", dur(Math.max(0, d))) : h("span", { class: "warn-t" }, t("delayBefore", dur(-d)));
     }
-    solanaCard = h("div", { class: "card" }, h("h4", null, t("solana"), h("span", { class: "tag" }, chainInfo.network)),
+    solanaCard = fold(t("solana"), [h("span", { class: "tag" }, chainInfo.network)], [
       kv([
         [t("memo"), chainInfo.confirmed ? null : h("span", { class: "mono" }, chainInfo.memo)],
         [t("blockTime"), chainInfo.blockTime ? fmtDate(chainInfo.blockTime * 1000) : null],
@@ -960,7 +980,7 @@ function render(r) {
         [t("signer"), chainInfo.signers?.length ? h("span", null, ...chainInfo.signers.flatMap((s, i) => [i ? ", " : "", link(explorerAddr(s, chainInfo.network), short(s))])) : null],
         ["Tx", link(explorerTx(chainInfo.signature, chainInfo.network), short(chainInfo.signature))],
       ]),
-      h("p", { class: "note" }, link(explorerTx(chainInfo.signature, chainInfo.network), t("explorer")), chainInfo.rpc ? " · " + t("via", chainInfo.rpc) : null));
+      h("p", { class: "note" }, link(explorerTx(chainInfo.signature, chainInfo.network), t("explorer")), chainInfo.rpc ? " · " + t("via", chainInfo.rpc) : null)]);
   }
 
   // Hardware
@@ -971,7 +991,7 @@ function render(r) {
     const boots = [t("verified"), t("selfSigned"), t("unverified"), t("failed")];
     const os = isNum(a.osVersion) && a.osVersion > 0 ? String(Math.floor(a.osVersion / 10000)) : null;
     const patch = isNum(a.osPatch) ? String(a.osPatch).replace(/^(\d{4})(\d{2}).*$/, "$1-$2") : null;
-    hwCard = h("div", { class: "card" }, h("h4", null, t("hardware")),
+    hwCard = fold(t("hardware"), [], [
       kv([
         [t("level"), h("span", { class: a.securityLevel === 2 ? "ok-t" : "" }, levels[a.securityLevel] || "?")],
         [t("boot"), isNum(a.bootState) ? h("span", { class: a.bootState === 0 ? "ok-t" : "warn-t" }, boots[a.bootState] || "?") : null],
@@ -983,21 +1003,23 @@ function render(r) {
       ]),
       revocationsAgeDays() > REVOCATIONS_MAX_AGE_DAYS
         ? h("p", { class: "note warn-t" }, "⚠ " + t("revokedOld", revocations.date))
-        : h("p", { class: "note" }, t("revokedNote", revocations.date)));
+        : h("p", { class: "note" }, t("revokedNote", revocations.date))]);
   }
 
-  const side = [solanaCard, hwCard].filter(Boolean);
-  root.append(h("div", { class: "grid2" }, readingsCard, side.length ? h("div", { style: "display:grid;gap:16px;align-content:start" }, ...side) : null));
+  // One folded card under the other, full width.
+  root.append(...[readingsCard, solanaCard, hwCard].filter(Boolean));
   // What a green result does and does not mean, so nobody reads more into it than the proof holds. Only shown
   // when all five checks passed: its "Proven" paragraph would be false for anything less.
   const limit = (color, title, body) => h("p", { style: "margin:10px 0 0" }, h("b", { style: "color:var(--" + color + ")" }, t(title)), h("br"), t(body));
   if (Object.values(checks).every((c) => c.ok === true)) {
-    root.append(h("div", { class: "card", id: "limits", style: "margin-top:16px" }, h("h4", null, t("limitsTitle")),
+    root.append(fold(t("limitsTitle"), [], [
       limit("mint", "limitsProvenT", "limitsProven"),
       limit("amber", "limitsFlaggedT", "limitsFlagged"),
-      limit("muted", "limitsNotT", "limitsNot")));
+      limit("muted", "limitsNotT", "limitsNot")], { id: "limits" }));
   }
   root.classList.add("on");
+  // The five checks above already say what was verified: the explanation below would only repeat them.
+  document.getElementById("how").hidden = true;
 }
 
 /* ---------- Wiring ---------- */
@@ -1038,12 +1060,8 @@ const status = document.getElementById("status");
 // Inside another site's frame, a fake banner could be drawn over the real result: refuse to verify there.
 const framed = (() => { try { return window.top !== window.self; } catch (_) { return true; } })();
 
-// Proof received by tap, kept so the photo can be added afterwards to finish the check.
-let tapProof = null;
-
 async function run(files) {
   if (framed) return;
-  if (tapProof && !files.some(isJson)) files = [tapProof, ...files];
   const id = ++runId;
   status.className = "";
   status.textContent = t("checking");
@@ -1052,7 +1070,6 @@ async function run(files) {
   try {
     const report = await verify(files);
     if (id !== runId) return;
-    report.viaTap = files.includes(tapProof);
     if (lastShownUrl) URL.revokeObjectURL(lastShownUrl);
     report.photoUrl = lastShownUrl = report.photo ? URL.createObjectURL(report.photo) : null;
     lastReport = report;
@@ -1110,43 +1127,7 @@ async function loadSample() {
 sampleBtn.addEventListener("click", loadSample);
 fetch("samples/manifest.json", { method: "HEAD", cache: "no-store" }).then((r) => { if (r.ok) sampleBtn.hidden = false; }).catch(() => {});
 
-/* ---------- "Show by tap": a Seeker held against this phone opens …#p1=<proof> ---------- */
-// The part after '#' never reaches the server. The app packs the proof JSON with zlib, then base64url.
-const TAP_MAX = 64 * 1024;
-async function readTapLink() {
-  const m = /^#p1=([A-Za-z0-9_-]{1,40000})$/.exec(location.hash);
-  if (!m || framed) return;
-  // Out of the address bar and the history: the proof can hold an exact position.
-  history.replaceState(null, "", location.pathname + location.search);
-  let file;
-  try {
-    const b = m[1].replace(/-/g, "+").replace(/_/g, "/");
-    const packed = Uint8Array.from(atob(b + "===".slice((b.length + 3) % 4)), (c) => c.charCodeAt(0));
-    const reader = new Blob([packed]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
-    const parts = [];
-    let size = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.length;
-      if (size > TAP_MAX) throw new Error("too big");
-      parts.push(value);
-    }
-    const text = await new Blob(parts).text();
-    const name = String(JSON.parse(text).photo_file || "imprint").replace(/\.[^.]*$/, "");
-    file = new File([text], name + ".proof.json", { type: "application/json" });
-  } catch (_) {
-    status.className = "err";
-    status.textContent = t("tapBad");
-    return;
-  }
-  tapProof = file;
-  run([file]);
-}
-window.addEventListener("hashchange", readTapLink);
-
 applyLang();
-readTapLink();
 if (framed) {
   const url = location.origin + location.pathname;
   document.querySelector("main").replaceChildren(h("p", { class: "card", style: "margin-top:28px" },
