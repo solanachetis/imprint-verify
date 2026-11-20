@@ -6,10 +6,23 @@ Imprint is an app for the Solana Seeker phone. When you take a photo, the phone'
 together with what its sensors read at that instant, and your wallet seals the fingerprint on Solana. This page
 lets anyone check such a proof in a browser, without a Seeker and without an account.
 
-## How to use it
+## How to check a proof
 
-Open [imprintproof.app](https://imprintproof.app) and drop the two files exported by the app:
-`imprint-….jpg` and `imprint-….proof.json`.
+**You took the photo** (on your Seeker):
+
+1. **Open it in Imprint**: go to Journal and tap the photo.
+2. **Save both files**: tap "Save photo + proof to phone". The photo (`.jpg`) and its proof (`.proof.json`)
+   land in `Download/Imprint`.
+3. **Send both files** together. A proof contains the exact place: share it only with people you trust.
+
+**Someone sent you a proof:**
+
+1. **Keep both files**: save the photo and its `.proof.json` on your phone or computer. One without the other
+   can't be checked.
+2. **Drop them**: open [imprintproof.app](https://imprintproof.app) and drop both files on the round stamp, or
+   tap "Choose files" and select both.
+3. **Read the verdict**: "Authentic" in green means all five checks passed. Any other verdict says what is not
+   proven.
 
 ## The five checks
 
