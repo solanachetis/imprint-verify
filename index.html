@@ -3,69 +3,121 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' blob: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' blob: data:; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https:; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Imprint Verify</title>
 <meta name="description" content="Verify an Imprint proof: photo, sensor readings, phone chip signature and Solana seal, checked in your browser.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='24 24 60 60'%3E%3Cpath d='M29.57,45.11 A26,26 0 1,1 29.57,62.89 M60.84,72.79 A20,20 0 1,1 72.79,60.84 M61,41.88 A14,14 0 1,1 47,41.88 M50,60.93 A8,8 0 1,1 58,60.93' fill='none' stroke='%2314F195' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='24 24 60 60'%3E%3Cpath d='M29.57,45.11 A26,26 0 1,1 29.57,62.89 M60.84,72.79 A20,20 0 1,1 72.79,60.84 M61,41.88 A14,14 0 1,1 47,41.88 M50,60.93 A8,8 0 1,1 58,60.93' fill='none' stroke='%235B3FA0' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
+  /* "Visa stamp" world, same as the app: a passport security page, stamp inks on navy text.
+     Variable names are kept from the dark theme because the script reads some of them (--mint, --amber, --muted):
+     --mint is now the green ink of a passed check. */
+  @font-face { font-family: Archivo; src: url(fonts/archivo.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "Archivo Narrow"; src: url(fonts/archivo-narrow.woff2) format("woff2"); font-weight: 400 700; font-display: swap; }
+  @font-face { font-family: "Courier Prime"; src: url(fonts/courier-prime-bold.woff2) format("woff2"); font-weight: 700; font-display: swap; }
   :root {
-    color-scheme: dark;
-    --bg: #07090d; --surface: #10141b; --surface2: #171c25; --outline: #232a36;
-    --text: #e8ecf2; --muted: #8a94a6; --mint: #14f195; --purple: #9945ff; --cyan: #00c2ff;
-    --amber: #ffb547; --danger: #ff5c7a;
-    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+    color-scheme: light;
+    --bg: #ede6f2; --surface: #f6f1f9; --surface2: #e3d9ec; --outline: #cdbedd;
+    --text: #1c2a4a; --muted: #5e5670; --mint: #1f7a5a; --purple: #5b3fa0; --cyan: #5b3fa0;
+    --amber: #a35f0e; --danger: #c8323c; --navy: #1c2a4a;
+    --mono: "Courier Prime", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --narrow: "Archivo Narrow", "Arial Narrow", sans-serif;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
     background: var(--bg); color: var(--text);
-    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 16px/1.5 Archivo, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+    background-image: repeating-radial-gradient(circle at 50% 330px, transparent 0 13px, rgba(205,190,221,.6) 13px 14px);
   }
-  a { color: var(--cyan); }
+  ::selection { background: var(--purple); color: #fff; }
+  a { color: var(--purple); text-underline-offset: 3px; }
   .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: .2px; }
-  .brand small { color: var(--muted); font-weight: 500; }
-  h1 { font-size: clamp(28px, 6vw, 44px); line-height: 1.1; margin: 28px 0 12px; letter-spacing: -.5px; }
-  h1 span { background: linear-gradient(90deg, var(--purple), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .lead { color: var(--muted); max-width: 640px; margin: 0 0 28px; }
-  h2 { font-size: 20px; margin: 48px 0 16px; }
-  .card { background: var(--surface); border: 1px solid var(--outline); border-radius: 16px; padding: 20px; }
-  #drop { border: 2px dashed var(--outline); text-align: center; padding: 36px 20px; transition: border-color .15s, background .15s; }
-  #drop.over { border-color: var(--mint); background: #0f1a16; }
-  #drop p { margin: 8px 0; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; }
+  .brand small { font: 700 13px var(--narrow); text-transform: uppercase; letter-spacing: .08em; color: var(--purple); }
+  header a { font-weight: 600; font-size: 14px; text-decoration: none; }
+  h1 { font-size: clamp(34px, 6vw, 58px); font-weight: 800; line-height: 1.02; margin: 12px 0 12px; letter-spacing: -.03em; text-align: center; }
+  h1 span { color: var(--purple); }
+  .lead { color: var(--muted); max-width: 56ch; margin: 0 auto; text-align: center; }
+  h2 { font: 700 14px var(--narrow); text-transform: uppercase; letter-spacing: .12em; color: var(--purple); margin: 48px 0 14px; }
+  .card { background: rgba(246,241,249,.88); border: 1.5px solid var(--outline); border-radius: 14px; padding: 20px; }
+
+  /* The drop zone is the stamp pad; the five checks wait around it as unstruck stamps. */
+  .stage { position: relative; width: min(600px, 100%); aspect-ratio: 1.25; margin: 22px auto 0; }
+  #drop {
+    position: absolute; top: 8%; bottom: 8%; left: 50%; aspect-ratio: 1; transform: translateX(-50%);
+    border-radius: 50%; border: 5px solid var(--purple); background: rgba(246,241,249,.94); padding: 34px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    transition: background .15s, transform .15s;
+  }
+  #drop::before { content: ""; position: absolute; inset: 14px; border-radius: 50%; border: 2px dashed var(--purple); pointer-events: none; }
+  #drop.over { background: #e6dcf3; transform: translateX(-50%) scale(1.02); }
+  #drop > * { position: relative; }
+  #drop p { margin: 4px 0; }
+  #drop #dropTitle b { font: 700 clamp(18px, 2.6vw, 25px) var(--narrow); text-transform: uppercase; letter-spacing: .06em; color: var(--purple); }
   #drop .hint { color: var(--muted); font-family: var(--mono); font-size: 13px; }
-  .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
-  .btn { border: 0; border-radius: 999px; padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; }
-  .btn.primary { background: var(--mint); color: #04130c; }
-  .btn.ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--outline); }
-  .btn:focus-visible, summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
-  #status { color: var(--muted); text-align: center; min-height: 24px; margin: 14px 0 0; }
+  .btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .btn { border: 0; border-radius: 999px; padding: 0 20px; height: 46px; font: inherit; font-weight: 700; cursor: pointer; }
+  .btn.primary { background: var(--purple); color: #fff; }
+  .btn.ghost { background: rgba(255,255,255,.6); color: var(--purple); border: 2px solid var(--purple); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, summary:focus-visible, .linkbtn:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
+  #status { color: var(--muted); text-align: center; min-height: 22px; margin: 8px 0 0; font-size: 14px; }
   #status.err { color: var(--danger); }
-  #results { display: none; margin-top: 28px; }
+  .ring .ck {
+    position: absolute; width: 104px; height: 104px; border-radius: 50%; border: 2.5px dashed rgba(91,63,160,.5);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px;
+    background: rgba(237,230,242,.88); color: var(--muted); transition: color .2s, border-color .2s;
+  }
+  .ring .ck i { font: 700 12px var(--mono); font-style: normal; }
+  .ring .ck b { font: 700 14px/1.1 var(--narrow); text-transform: uppercase; letter-spacing: .03em; }
+  .ring .c1 { left: -14%; top: 2%; transform: rotate(-6deg); }
+  .ring .c2 { right: -14%; top: 2%; transform: rotate(7deg); }
+  .ring .c3 { right: -18%; top: 40%; transform: rotate(-4deg); }
+  .ring .c4 { right: -12%; bottom: 0; transform: rotate(5deg); }
+  .ring .c5 { left: -16%; top: 46%; transform: rotate(-8deg); }
+  /* Struck: solid border in its ink, landing from above. */
+  .ring .ck.s-ok, .ring .ck.s-fail, .ring .ck.s-none { border-style: solid; border-width: 3.5px; animation: strike .26s cubic-bezier(.2,.8,.2,1) both; }
+  .ring .ck.s-ok { color: var(--mint); border-color: var(--mint); }
+  .ring .ck.s-fail { color: var(--danger); border-color: var(--danger); }
+  .ring .ck.s-none { color: var(--amber); border-color: var(--amber); }
+  .ring .ck:nth-child(2) { animation-delay: .12s; } .ring .ck:nth-child(3) { animation-delay: .24s; }
+  .ring .ck:nth-child(4) { animation-delay: .36s; } .ring .ck:nth-child(5) { animation-delay: .48s; }
+  @keyframes strike { from { opacity: 0; scale: 1.5; } to { opacity: 1; scale: 1; } }
+  @media (prefers-reduced-motion: reduce) { .ring .ck { animation: none !important; } }
+  @media (max-width: 860px) {
+    .stage { aspect-ratio: auto; margin-top: 18px; }
+    #drop { position: relative; top: auto; bottom: auto; left: auto; transform: none; width: min(330px, 88vw); margin: 0 auto; padding: 30px; }
+    #drop.over { transform: scale(1.02); }
+    .ring { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+    .ring .ck { position: static; transform: none; width: auto; height: auto; border-radius: 10px; padding: 8px 10px; flex-direction: row; gap: 8px; justify-content: flex-start; text-align: left; }
+    .ring .ck:last-child { grid-column: span 2; }
+  }
+
+  #results { display: none; margin-top: 32px; }
   #results.on { display: block; }
-  .verdict { display: flex; gap: 16px; align-items: flex-start; border-radius: 16px; padding: 20px; border: 1px solid; }
-  .verdict .ico { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; font-weight: 800; }
-  .verdict h3 { margin: 0 0 4px; font-size: 22px; }
+  .verdict { display: flex; gap: 16px; align-items: flex-start; border-radius: 14px; padding: 20px; border: 3px solid; background: rgba(246,241,249,.92); }
+  .verdict .ico { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; font-weight: 800; border: 3px double; }
+  .verdict h3 { margin: 0 0 4px; font: 700 26px/1.1 var(--narrow); text-transform: uppercase; letter-spacing: .03em; }
   .verdict p { margin: 0; color: var(--muted); }
-  .v-ok { background: #0b1d16; border-color: #145c3e; } .v-ok .ico { background: var(--mint); color: #04130c; }
-  .v-warn { background: #1e170a; border-color: #5c4416; } .v-warn .ico { background: var(--amber); color: #1e1300; }
-  .v-fail { background: #200c12; border-color: #66202f; } .v-fail .ico { background: var(--danger); color: #22050b; }
+  .v-ok { border-color: var(--mint); } .v-ok h3, .v-ok .ico { color: var(--mint); }
+  .v-warn { border-color: var(--amber); } .v-warn h3, .v-warn .ico { color: var(--amber); }
+  .v-fail { border-color: var(--danger); } .v-fail h3, .v-fail .ico { color: var(--danger); }
   .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 16px; }
   @media (max-width: 680px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
   .photo { padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 200px; align-self: start; }
   .photo img { display: block; width: 100%; height: auto; max-height: 560px; object-fit: contain; }
   .photo .none { color: var(--muted); padding: 20px; text-align: center; }
   .checks { list-style: none; margin: 0; padding: 0; }
-  .checks li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--outline); }
+  .checks li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1.5px dashed var(--outline); }
   .checks li:last-child { border-bottom: 0; }
-  .dot { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; margin-top: 1px; }
-  .s-ok .dot { background: var(--mint); color: #04130c; }
-  .s-fail .dot { background: var(--danger); color: #22050b; }
-  .s-none .dot { background: var(--surface2); color: var(--muted); border: 1px solid var(--outline); }
-  .s-warn .dot { background: var(--amber); color: #1e1300; }
+  .dot { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; margin-top: 1px; border: 2px solid; }
+  .s-ok .dot { color: var(--mint); }
+  .s-fail .dot { color: var(--danger); }
+  .s-none .dot { color: var(--muted); border-style: dashed; }
+  .s-warn .dot { color: var(--amber); }
   .checks b { display: block; }
   .checks .why { color: var(--muted); font-size: 14px; }
   .checks .detail { font-size: 13px; margin-top: 4px; }
@@ -83,25 +135,27 @@
   details.fold > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 16px 20px; color: var(--text); font-size: 15px; }
   details.fold > summary::-webkit-details-marker { display: none; }
   details.fold > summary h4 { margin: 0; }
-  details.fold > summary::after { content: "›"; margin-left: auto; color: var(--muted); font-size: 22px; line-height: 1; transition: transform .15s; }
+  details.fold > summary::after { content: "›"; margin-left: auto; color: var(--purple); font-size: 22px; line-height: 1; transition: transform .15s; }
   details.fold[open] > summary::after { transform: rotate(90deg); }
   details.fold > .body { padding: 0 20px 18px; }
-  .linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--cyan); cursor: pointer; text-decoration: underline; }
+  .linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--purple); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
   .mono { font-family: var(--mono); font-size: 13px; }
-  .card h4 { margin: 0 0 14px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-  .card h4 .tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--outline); border-radius: 999px; padding: 1px 8px; }
+  .card h4 { margin: 0 0 14px; font: 700 14px var(--narrow); text-transform: uppercase; letter-spacing: .1em; color: var(--purple); display: flex; align-items: center; gap: 8px; }
+  .card h4 .tag { font: 700 11px var(--narrow); color: var(--muted); border: 1.5px solid var(--outline); border-radius: 6px; padding: 1px 7px; }
   .note { color: var(--muted); font-size: 13px; margin: 14px 0 0; }
   .ok-t { color: var(--mint); } .warn-t { color: var(--amber); } .fail-t { color: var(--danger); }
-  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
-  .steps li { counter-increment: s; position: relative; padding: 14px 16px 14px 56px; }
-  .steps li::before { content: counter(s); position: absolute; left: 16px; top: 14px; width: 26px; height: 26px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--outline); display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--mint); }
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .steps li { position: relative; padding: 14px 16px 14px 60px; }
+  .steps li i { position: absolute; left: 16px; top: 13px; width: 30px; height: 30px; border-radius: 50%; border: 2px dashed rgba(91,63,160,.55); display: grid; place-items: center; font: 700 13px var(--mono); font-style: normal; color: var(--purple); }
   .steps b { display: block; }
   .steps span { color: var(--muted); font-size: 14px; }
   details { margin-top: 16px; }
   summary { cursor: pointer; color: var(--muted); font-size: 14px; }
   .rpc { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .rpc input { flex: 1 1 260px; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--outline); border-radius: 10px; padding: 9px 12px; font: 14px var(--mono); }
-  footer { color: var(--muted); font-size: 13px; padding: 48px 0 32px; border-top: 1px solid var(--outline); margin-top: 56px; }
+  .rpc input { flex: 1 1 260px; min-width: 0; background: var(--surface); color: var(--text); border: 1.5px solid var(--outline); border-radius: 10px; padding: 9px 12px; font: 14px var(--mono); }
+  .rpc input:focus { outline: 2px solid var(--purple); outline-offset: 1px; }
+  footer { color: #a9b0c6; background: var(--navy); font-size: 13px; padding: 22px 16px 28px; margin-top: 56px; text-align: center; }
+  footer a { color: #ede6f2; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 </style>
 </head>
@@ -110,28 +164,37 @@
   <header>
     <div class="brand">
       <svg width="32" height="32" viewBox="24 24 60 60" aria-hidden="true">
-        <defs><linearGradient id="g" x1="28" y1="28" x2="80" y2="80" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9945FF"/><stop offset="1" stop-color="#14F195"/></linearGradient></defs>
-        <path d="M29.57,45.11 A26,26 0 1,1 29.57,62.89 M60.84,72.79 A20,20 0 1,1 72.79,60.84 M61,41.88 A14,14 0 1,1 47,41.88 M50,60.93 A8,8 0 1,1 58,60.93" fill="none" stroke="url(#g)" stroke-width="3.6" stroke-linecap="round"/>
-        <circle cx="54" cy="54" r="3" fill="#14F195"/>
+        <path d="M29.57,45.11 A26,26 0 1,1 29.57,62.89 M60.84,72.79 A20,20 0 1,1 72.79,60.84 M61,41.88 A14,14 0 1,1 47,41.88 M50,60.93 A8,8 0 1,1 58,60.93" fill="none" stroke="#5B3FA0" stroke-width="3.6" stroke-linecap="round"/>
+        <circle cx="54" cy="54" r="3" fill="#1F7A5A"/>
       </svg>
       Imprint <small>Verify</small>
     </div>
+    <a href="#how" data-i18n="howTitle"></a>
   </header>
 
   <main>
     <h1 data-i18n="heroTitle"></h1>
     <p class="lead" data-i18n="heroLead"></p>
 
-    <section id="drop" class="card" aria-labelledby="dropTitle">
-      <p id="dropTitle"><b data-i18n="dropTitle"></b></p>
-      <p class="hint">imprint-….jpg + imprint-….proof.json</p>
-      <div class="btns">
-        <button type="button" class="btn primary" id="pick" data-i18n="pick"></button>
-        <button type="button" class="btn ghost" id="sample" hidden data-i18n="sample"></button>
+    <div class="stage">
+      <section id="drop" aria-labelledby="dropTitle">
+        <p id="dropTitle"><b data-i18n="dropTitle"></b></p>
+        <p class="hint">imprint-….jpg + imprint-….proof.json</p>
+        <div class="btns">
+          <button type="button" class="btn primary" id="pick" data-i18n="pick"></button>
+        </div>
+        <input type="file" id="file" multiple accept=".json,application/json,image/*" class="sr" tabindex="-1">
+        <p id="status" role="status" aria-live="polite"></p>
+      </section>
+      <!-- The five checks as stamps around the pad: struck in their ink once a proof has been checked. -->
+      <div class="ring" id="ring" aria-hidden="true">
+        <div class="ck c1" data-k="photo"><i>1</i><b data-i18n="how1t"></b></div>
+        <div class="ck c2" data-k="payload"><i>2</i><b data-i18n="how2t"></b></div>
+        <div class="ck c3" data-k="signature"><i>3</i><b data-i18n="how3t"></b></div>
+        <div class="ck c4" data-k="attestation"><i>4</i><b data-i18n="how4t"></b></div>
+        <div class="ck c5" data-k="chain"><i>5</i><b data-i18n="how5t"></b></div>
       </div>
-      <input type="file" id="file" multiple accept=".json,application/json,image/*" class="sr" tabindex="-1">
-      <p id="status" role="status" aria-live="polite"></p>
-    </section>
+    </div>
 
     <section id="results" aria-live="polite"></section>
 
@@ -139,11 +202,11 @@
     <section id="how">
       <h2 data-i18n="howTitle"></h2>
       <ol class="steps">
-        <li class="card"><b data-i18n="how1t"></b><span data-i18n="how1"></span></li>
-        <li class="card"><b data-i18n="how2t"></b><span data-i18n="how2"></span></li>
-        <li class="card"><b data-i18n="how3t"></b><span data-i18n="how3"></span></li>
-        <li class="card"><b data-i18n="how4t"></b><span data-i18n="how4"></span></li>
-        <li class="card"><b data-i18n="how5t"></b><span data-i18n="how5"></span></li>
+        <li class="card"><i>1</i><b data-i18n="how1t"></b><span data-i18n="how1"></span></li>
+        <li class="card"><i>2</i><b data-i18n="how2t"></b><span data-i18n="how2"></span></li>
+        <li class="card"><i>3</i><b data-i18n="how3t"></b><span data-i18n="how3"></span></li>
+        <li class="card"><i>4</i><b data-i18n="how4t"></b><span data-i18n="how4"></span></li>
+        <li class="card"><i>5</i><b data-i18n="how5t"></b><span data-i18n="how5"></span></li>
       </ol>
     </section>
     <p class="note" data-i18n="privacy"></p>
@@ -157,12 +220,10 @@
       </div>
     </details>
   </main>
-
-  <footer>
-    <span data-i18n="footer"></span> · <a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms of use</a> · © 2026 SolanaChetis
-  </footer>
 </div>
-
+<footer>
+  <span data-i18n="footer"></span> · <a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms of use</a> · © 2026 SolanaChetis
+</footer>
 <script>
 "use strict";
 
@@ -216,7 +277,6 @@ const I18N = {
     heroLead: "Drop an Imprint proof: the photo and its .proof.json file. Everything is checked right here in your browser. Nothing is uploaded; only the transaction signature is looked up on Solana.",
     dropTitle: "Drop both files here",
     pick: "Choose files",
-    sample: "Try a real proof",
     checking: "Checking…",
     needJson: "Add the .proof.json file that came with the photo.",
     badJson: "This file is not an Imprint proof.",
@@ -755,6 +815,12 @@ function render(r) {
     ));
   }
   root.append(h("div", { class: "grid2" }, photoCard, h("div", { class: "card" }, list)));
+  // The stamps around the drop zone are struck in the same ink as each check's line.
+  for (const [key] of items) {
+    const stamp = document.querySelector('#ring [data-k="' + key + '"]');
+    const c = checks[key];
+    if (stamp) stamp.className = stamp.className.replace(/ s-\w+/g, "") + (c.ok === true ? " s-ok" : c.ok === false ? " s-fail" : " s-none");
+  }
 
   // Readings
   const loc = payload.loc || null, env = payload.env || {}, motion = payload.motion || {}, nfc = payload.nfc || null, device = payload.device || {};
@@ -894,6 +960,11 @@ function render(r) {
 
 /* ---------- Wiring ---------- */
 
+/** Unstrikes the five stamps around the drop zone before a new proof is checked. */
+function clearStamps() {
+  document.querySelectorAll("#ring .ck").forEach((el) => { el.className = el.className.replace(/ s-\w+/g, ""); });
+}
+
 function staleFix(payload) {
   const age = payload.loc && payload.loc.age_ms;
   return isNum(age) && age > STALE_FIX_MS;
@@ -935,6 +1006,7 @@ async function run(files) {
   const id = ++runId;
   status.className = "";
   status.textContent = t("checking");
+  clearStamps();
   lastReport = null;
   document.getElementById("results").classList.remove("on");
   try {
@@ -969,25 +1041,6 @@ window.addEventListener("drop", (e) => {
   if (fs.length) run(fs);
 });
 
-// Optional bundled example (samples/ next to this page).
-const sampleBtn = document.getElementById("sample");
-async function loadSample() {
-  status.className = "";
-  status.textContent = t("checking");
-  try {
-    const manifest = await (await fetch("samples/manifest.json", { cache: "no-store" })).json();
-    const files = await Promise.all(manifest.files.map(async (name) => {
-      const blob = await (await fetch("samples/" + encodeURIComponent(name), { cache: "no-store" })).blob();
-      return new File([blob], name, { type: /\.json$/i.test(name) ? "application/json" : blob.type || "image/jpeg" });
-    }));
-    run(files);
-  } catch (e) {
-    status.className = "err";
-    status.textContent = e.message || String(e);
-  }
-}
-sampleBtn.addEventListener("click", loadSample);
-fetch("samples/manifest.json", { method: "HEAD", cache: "no-store" }).then((r) => { if (r.ok) sampleBtn.hidden = false; }).catch(() => {});
 
 applyLang();
 if (framed) {
