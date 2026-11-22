@@ -433,6 +433,7 @@ const I18N = {
     rpcHelp: "Optional. An https:// mainnet endpoint that allows browser requests (Helius, Triton…). It is asked only when the default nodes can't find the transaction, and a seal seen by it alone is shown as such. Leave empty to use the default nodes.",
     footer: "Imprint · Photos you can prove are real, from the Solana Seeker",
     rezipped: "This file was re-zipped. Send the original .zip from Imprint, or drop the files it contains.",
+    lonePhoto: "This photo belongs to a dossier: it is sealed with the other photos. Drop the whole dossier .zip exported by Imprint.",
     badZip: "This .zip is damaged or does not match its own list of files. Send the original .zip from Imprint.",
     dAuth: "Authentic dossier: {0} photos",
     dAuthSub: "Every photo and its readings are untouched, signed by the chip of a real phone, and sealed together on Solana{0}.",
@@ -944,6 +945,8 @@ async function verify(files) {
   let proof;
   try { proof = JSON.parse(await jsonFile.text()); } catch (_) { throw new Error(t("badJson")); }
   if (!proof || proof.format !== "imprint-proof/1" || typeof proof.payload_raw !== "string" || !proof.device) throw new Error(t("badJson"));
+  // A dossier photo has no seal of its own: checked alone it would only read "not sealed", which is misleading.
+  if (typeof proof.dossier === "string" && !proof.solana) throw new Error(t("lonePhoto"));
 
   const images = files.filter((f) => f !== jsonFile && (f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic)$/i.test(f.name)));
   const photo = images.find((f) => f.name === proof.photo_file) || images[0] || null;
