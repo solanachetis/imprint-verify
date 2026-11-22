@@ -144,6 +144,12 @@
   .card h4 .tag { font: 700 11px var(--narrow); color: var(--muted); border: 1.5px solid var(--outline); border-radius: 6px; padding: 1px 7px; }
   .note { color: var(--muted); font-size: 13px; margin: 14px 0 0; }
   .ok-t { color: var(--mint); } .warn-t { color: var(--amber); } .fail-t { color: var(--danger); }
+  .dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin-top: 16px; }
+  .dgrid button { position: relative; padding: 0; border: 1px solid var(--outline); border-radius: 10px; overflow: hidden; background: var(--surface2); cursor: pointer; }
+  .dgrid button:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+  .dgrid img, .dgrid .none { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .dgrid .none { display: grid; place-items: center; color: var(--muted); }
+  .dgrid .w { position: absolute; top: 4px; right: 6px; background: var(--surface); border-radius: 6px; padding: 0 4px; }
   .steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
   .steps li { position: relative; padding: 14px 16px 14px 60px; }
   .steps li i { position: absolute; left: 16px; top: 13px; width: 30px; height: 30px; border-radius: 50%; border: 2px dashed rgba(91,63,160,.55); display: grid; place-items: center; font: 700 13px var(--mono); font-style: normal; color: var(--purple); }
@@ -186,7 +192,7 @@
         <div class="btns">
           <button type="button" class="btn primary" id="pick" data-i18n="pick"></button>
         </div>
-        <input type="file" id="file" multiple accept=".json,application/json,image/*" class="sr" tabindex="-1">
+        <input type="file" id="file" multiple accept=".json,application/json,image/*,.zip,application/zip" class="sr" tabindex="-1">
         <p id="status" role="status" aria-live="polite"></p>
       </section>
       <!-- The five checks as stamps around the pad: struck in their ink once a proof has been checked. -->
@@ -256,6 +262,7 @@
 /* ---------- Constants ---------- */
 
 const MEMO_PREFIX = "imprint:v1:sha256:";
+const DOSSIER_MEMO_PREFIX = "imprint:v1:dossier:sha256:";
 const KEY_CHALLENGE = "imprint-device-key";
 // Imprint seal fee: SKR burned and paid to the treasury (or SOL when the wallet has no SKR).
 const SKR_MINT = "SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3";
@@ -425,6 +432,28 @@ const I18N = {
     advanced: "Advanced: use your own Solana RPC",
     rpcHelp: "Optional. An https:// mainnet endpoint that allows browser requests (Helius, Triton…). It is asked only when the default nodes can't find the transaction, and a seal seen by it alone is shown as such. Leave empty to use the default nodes.",
     footer: "Imprint · Photos you can prove are real, from the Solana Seeker",
+    rezipped: "This file was re-zipped. Send the original .zip from Imprint, or drop the files it contains.",
+    badZip: "This .zip is damaged or does not match its own list of files. Send the original .zip from Imprint.",
+    dAuth: "Authentic dossier: {0} photos",
+    dAuthSub: "Every photo and its readings are untouched, signed by the chip of a real phone, and sealed together on Solana{0}.",
+    dUnsealedSub: "The photos are intact but the dossier is not written on Solana, so its date is not guaranteed.",
+    dIntactSub: "The photos were not changed since they were signed, but nothing proves they come from the Imprint app on a real phone.",
+    dWarn: "Check the marked photos",
+    dWarnSub: "The dossier is complete and sealed, but some photos carry a warning (position or clock). Open the photos marked ⚠.",
+    dMissing: "A photo is missing from the dossier.",
+    dAdded: "A photo was added that the dossier does not list.",
+    dChanged: "A photo was changed after it was signed.",
+    dOtherPhone: "A photo comes from another phone than the dossier.",
+    dSealMismatch: "The seal does not match this dossier: its list of photos is not the one written on Solana.",
+    dListChanged: "The dossier's list of photos was changed after it was signed.",
+    dDup: "The dossier lists the same photo twice.",
+    dSealed: "Sealed on Solana",
+    dTaken: "Photos taken",
+    dTakenVal: "between {0} and {1}",
+    dComplete: "Completeness",
+    dCompleteVal: "No photo removed or added",
+    dBack: "← Back to the dossier",
+    dHint: "Tap a photo to see its own checks and readings.",
   },
 };
 
@@ -443,7 +472,7 @@ function applyLang() {
       el.textContent = t(key);
     }
   }
-  if (lastReport) render(lastReport);
+  if (lastReport) (lastReport.dossier ? renderDossier : render)(lastReport);
 }
 
 /* ---------- Bytes, hashes, base64 ---------- */
@@ -684,10 +713,10 @@ async function fetchTransaction(network, signature) {
   throw lastError || new Error("RPC unreachable");
 }
 
-async function checkChain(solana, payloadHash) {
+async function checkChain(solana, payloadHash, prefix = MEMO_PREFIX) {
   if (!solana || !solana.signature) return { ok: null, detail: t("chainNone"), kind: "none" };
   const network = solana.network === "devnet" ? "devnet" : "mainnet";
-  const base = { network, signature: String(solana.signature), memo: MEMO_PREFIX + payloadHash };
+  const base = { network, signature: String(solana.signature), memo: prefix + payloadHash };
   if (!/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(base.signature)) return { ok: false, detail: t("chainMemo") };
   let found;
   try { found = await fetchTransaction(network, base.signature); } catch (_) {
@@ -721,7 +750,195 @@ async function checkChain(solana, payloadHash) {
 
 /* ---------- Verification ---------- */
 
+/* ---------- Zip (stored entries only, as Imprint writes them) ---------- */
+
+const MIME = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", json: "application/json" };
+const isJson = (f) => /\.json$/i.test(f.name) || f.type === "application/json";
+const isImage = (f) => f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic)$/i.test(f.name);
+
+// Reads the local headers one after the other. A compressed entry means someone re-zipped the file: say so
+// rather than ship an inflater.
+function readStoredZip(buf) {
+  const v = new DataView(buf);
+  const out = [];
+  const locals = []; // what was read, to compare with the zip's own table of contents
+  const name = (at, len) => {
+    if (at + len > buf.byteLength) throw new Error(t("badZip"));
+    return new TextDecoder().decode(new Uint8Array(buf, at, len));
+  };
+  let p = 0;
+  while (p + 30 <= buf.byteLength && v.getUint32(p, true) === 0x04034b50) {
+    const flags = v.getUint16(p + 6, true), method = v.getUint16(p + 8, true);
+    const size = v.getUint32(p + 18, true), nameLen = v.getUint16(p + 26, true), extraLen = v.getUint16(p + 28, true);
+    if (method !== 0 || (flags & 8)) throw new Error(t("rezipped"));
+    const n = name(p + 30, nameLen);
+    const start = p + 30 + nameLen + extraLen;
+    if (start + size > buf.byteLength) throw new Error(t("badZip"));
+    locals.push({ n, size, at: p });
+    const base = n.split("/").pop();
+    if (base) out.push(new File([new Uint8Array(buf, start, size)], base, { type: MIME[base.split(".").pop().toLowerCase()] || "" }));
+    p = start + size;
+  }
+  if (!out.length) throw new Error(t("badZip"));
+  // File managers list what the central directory says, not what the local headers hold: the two must be the
+  // same files, or the recipient would open other files than the ones checked here.
+  let end = -1;
+  for (let q = buf.byteLength - 22; q >= Math.max(0, buf.byteLength - 22 - 65535); q--) {
+    if (v.getUint32(q, true) === 0x06054b50) { end = q; break; }
+  }
+  if (end < 0) throw new Error(t("badZip"));
+  const count = v.getUint16(end + 10, true);
+  let c = v.getUint32(end + 16, true);
+  if (count !== locals.length) throw new Error(t("badZip"));
+  for (let k = 0; k < count; k++) {
+    if (c + 46 > buf.byteLength || v.getUint32(c, true) !== 0x02014b50) throw new Error(t("badZip"));
+    const nameLen = v.getUint16(c + 28, true), extraLen = v.getUint16(c + 30, true), commentLen = v.getUint16(c + 32, true);
+    const l = locals[k];
+    if (v.getUint16(c + 10, true) !== 0 || v.getUint32(c + 20, true) !== l.size || v.getUint32(c + 42, true) !== l.at
+      || name(c + 46, nameLen) !== l.n) throw new Error(t("badZip"));
+    c += 46 + nameLen + extraLen + commentLen;
+  }
+  return out;
+}
+
+async function expandZips(files) {
+  const out = [];
+  for (const f of files) {
+    if (/\.zip$/i.test(f.name) || /zip/.test(f.type)) out.push(...readStoredZip(await f.arrayBuffer()));
+    else out.push(f);
+  }
+  return out;
+}
+
+/* ---------- Dossier: several photos sealed together ---------- */
+
+// Every photo keeps its own proof (without a seal); the dossier's manifest lists their payload hashes, is signed
+// by the same chip key, and only its hash is on Solana. Photos are matched by hash, never by file name.
+async function verifyDossier(d, proofs, files) {
+  if (typeof d.manifest_raw !== "string" || !d.device) throw new Error(t("badJson"));
+  const manifestBytes = new TextEncoder().encode(d.manifest_raw);
+  const manifestHash = await sha256(manifestBytes);
+  let manifest = {};
+  try { manifest = JSON.parse(d.manifest_raw) || {}; } catch (_) {}
+  const listed = Array.isArray(manifest.photos) ? manifest.photos.map(String) : [];
+  const checks = {};
+  checks.manifest = manifestHash === d.manifest_sha256 && manifest.format === "imprint-dossier/1"
+    ? { ok: true } : { ok: false, detail: t("dListChanged") };
+  let sigOk = false;
+  try { sigOk = await verifyWith(b64(d.device.public_key_x509_b64), "1.2.840.10045.4.3.2", b64(d.device.signature_b64), manifestBytes); } catch (_) {}
+  checks.signature = sigOk ? { ok: true } : { ok: false, detail: t("dListChanged") };
+  await Promise.race([revocationsReady, new Promise((r) => setTimeout(r, 5000))]);
+  try {
+    checks.attestation = await checkAttestation(d.device.key_attestation_chain_b64, d.device.public_key_x509_b64);
+  } catch (_) {
+    checks.attestation = { ok: false, detail: t("attBad", t("attBroken")) };
+  }
+
+  const images = await Promise.all(files.filter(isImage).map(async (f) => ({ f, hash: await sha256(await f.arrayBuffer()) })));
+  const photos = [];
+  for (const proof of proofs) {
+    if (!proof || proof.format !== "imprint-proof/1" || typeof proof.payload_raw !== "string" || !proof.device) continue;
+    const payloadBytes = new TextEncoder().encode(proof.payload_raw);
+    const payloadHash = await sha256(payloadBytes);
+    let payload = {};
+    try { payload = JSON.parse(proof.payload_raw) || {}; } catch (_) {}
+    const img = images.find((i) => i.hash === proof.photo_sha256);
+    let sig = false;
+    try { sig = await verifyWith(b64(proof.device.public_key_x509_b64), "1.2.840.10045.4.3.2", b64(proof.device.signature_b64), payloadBytes); } catch (_) {}
+    photos.push({
+      proof, payload, payloadHash, photo: img ? img.f : null,
+      intact: !!img && proof.photo_sha256 === payload.photo && payloadHash === proof.payload_sha256 && sig,
+      sameDevice: proof.device.public_key_x509_b64 === d.device.public_key_x509_b64,
+    });
+  }
+  // A photo whose file is not found is "changed" when an unknown image was sent with it, "missing" otherwise.
+  const strays = images.filter((i) => !proofs.some((p) => p && p.photo_sha256 === i.hash));
+  const seen = photos.map((p) => p.payloadHash);
+  const missing = listed.filter((h) => !seen.includes(h)).length + (strays.length ? 0 : photos.filter((p) => !p.photo).length);
+  const changed = photos.some((p) => (p.photo || strays.length) && !p.intact);
+  if (new Set(listed).size !== listed.length) checks.complete = { ok: false, detail: t("dDup") };
+  else if (missing || listed.length < 2) checks.complete = { ok: false, detail: t("dMissing") };
+  else if (seen.some((h) => !listed.includes(h))) checks.complete = { ok: false, detail: t("dAdded") };
+  // An image with no proof, while every listed photo was found: the recipient would see one photo too many.
+  else if (strays.length && photos.every((p) => p.photo)) checks.complete = { ok: false, detail: t("dAdded") };
+  else checks.complete = { ok: true };
+  for (const p of photos) p.listed = listed.includes(p.payloadHash);
+  checks.photos = changed ? { ok: false, detail: t("dChanged") } : { ok: true };
+  checks.sameDevice = photos.every((p) => p.sameDevice) ? { ok: true } : { ok: false, detail: t("dOtherPhone") };
+  // The seal is checked against the hash we computed, never against the one the file claims.
+  checks.chain = await checkChain(d.solana, manifestHash, DOSSIER_MEMO_PREFIX);
+  if (checks.chain.ok === false && checks.chain.detail === t("chainMemo")) checks.chain.detail = t("dSealMismatch");
+  photos.sort((a, b) => listed.indexOf(a.payloadHash) - listed.indexOf(b.payloadHash));
+  return { dossier: d, manifest, photos, checks };
+}
+
+const photoWarn = (payload, chainInfo) => (payload.loc && payload.loc.mock === true) || olderApp(payload) || staleFix(payload)
+  || takenAfterSeal(payload, chainInfo) || clockOff(payload) || clockUnchecked(payload);
+
+function renderDossier(r) {
+  const { checks, photos } = r;
+  const root = document.getElementById("results");
+  root.replaceChildren();
+  const chainInfo = checks.chain.info;
+  // The first broken thing, most telling first, is the reason shown under the verdict.
+  const failed = ["chain", "complete", "sameDevice", "photos", "manifest", "signature", "attestation"]
+    .map((k) => checks[k]).find((c) => c && c.ok === false);
+  const warned = photos.filter((p) => photoWarn(p.payload, chainInfo));
+  let v;
+  if (failed) v = ["v-fail", "✕", t("vFail"), failed.detail || t("vFailSub")];
+  else if (checks.chain.kind === "rpc") v = ["v-warn", "…", t("vRpc"), t("vRpcSub")];
+  else if (checks.chain.kind === "notfound") v = ["v-warn", "?", t("vNotFound"), t("vNotFoundSub")];
+  else if (checks.chain.ok !== true) v = ["v-warn", "!", t("vUnsealed"), t("dUnsealedSub")];
+  else if (chainInfo.network !== "mainnet") v = ["v-warn", "!", t("vDevnet"), t("vDevnetSub")];
+  else if (checks.attestation.ok !== true) v = ["v-warn", "!", t("vIntact"), t("dIntactSub")];
+  else if (warned.length) v = ["v-warn", "!", t("dWarn"), t("dWarnSub")];
+  else if (chainInfo.custom) v = ["v-warn", "!", t("vCustom"), t("vCustomSub", chainInfo.rpc)];
+  else v = ["v-ok", "✓", t("dAuth", photos.length), t("dAuthSub", t("onDate", fmtDate(chainInfo.blockTime * 1000)))];
+  root.append(h("div", { class: "verdict " + v[0] }, h("div", { class: "ico", "aria-hidden": "true" }, v[1]), h("div", null, h("h3", null, v[2]), h("p", null, v[3]))));
+
+  const times = photos.map((p) => p.payload.t).filter(isNum).sort((a, b) => a - b);
+  const rows = [
+    [t("dSealed"), chainInfo && chainInfo.blockTime ? fmtDate(chainInfo.blockTime * 1000) : null],
+    [t("dTaken"), times.length ? t("dTakenVal", fmtDate(times[0]), fmtDate(times[times.length - 1])) : null],
+    [t("dComplete"), checks.complete.ok === true ? h("span", { class: "ok-t" }, t("dCompleteVal")) : h("b", { class: "fail-t" }, "⚠ " + checks.complete.detail)],
+    ["Tx", chainInfo && chainInfo.signature ? link(explorerTx(chainInfo.signature, chainInfo.network), short(chainInfo.signature)) : null],
+  ];
+  const grid = h("div", { class: "dgrid" });
+  for (const p of photos) {
+    if (p.photo && !p.url) p.url = URL.createObjectURL(p.photo);
+    const tile = h("button", { type: "button" }, p.url ? h("img", { src: p.url, alt: "" }) : h("div", { class: "none" }, "?"),
+      !p.intact || !p.sameDevice ? h("b", { class: "w fail-t" }, "✕") : photoWarn(p.payload, chainInfo) ? h("b", { class: "w warn-t" }, "⚠") : null);
+    tile.addEventListener("click", () => {
+      const ok = (c) => (c ? { ok: true } : { ok: false });
+      // A photo is sealed only through a sound dossier that lists it: never lend it the dossier's seal otherwise.
+      const sound = ["manifest", "signature", "complete"].every((k) => checks[k].ok === true);
+      const chain = p.listed && sound ? checks.chain : { ok: false, detail: p.listed ? failed && failed.detail : t("dAdded"), info: checks.chain.info };
+      render({
+        proof: p.proof, payload: p.payload, payloadHash: p.payloadHash, photo: p.photo, photoUrl: p.url || null,
+        checks: {
+          photo: p.photo ? ok(p.intact) : { ok: null, detail: t("photoMissing") }, payload: ok(p.payloadHash === p.proof.payload_sha256),
+          signature: ok(p.intact && p.sameDevice), attestation: checks.attestation, chain,
+        },
+      });
+      const back = h("button", { type: "button", class: "linkbtn" }, t("dBack"));
+      back.addEventListener("click", () => { renderDossier(r); root.scrollIntoView({ block: "start" }); });
+      root.prepend(back);
+      root.scrollIntoView({ block: "start" });
+    });
+    grid.append(tile);
+  }
+  root.append(h("div", { class: "card" }, kv(rows), grid, h("p", { class: "why" }, t("dHint"))));
+  root.classList.add("on");
+}
+
 async function verify(files) {
+  files = await expandZips(files);
+  // A dossier.json among the files: check the whole dossier, not one photo.
+  const parsed = [];
+  for (const f of files.filter(isJson)) { try { parsed.push(JSON.parse(await f.text())); } catch (_) { parsed.push(null); } }
+  const dossier = parsed.find((j) => j && j.format === "imprint-dossier/1");
+  if (dossier) return verifyDossier(dossier, parsed.filter((j) => j !== dossier), files);
+
   const jsonFile = files.find((f) => /\.json$/i.test(f.name) || f.type === "application/json");
   if (!jsonFile) throw new Error(t("needJson"));
   let proof;
@@ -1048,6 +1265,13 @@ async function run(files) {
   try {
     const report = await verify(files);
     if (id !== runId) return;
+    if (report.dossier) {
+      lastReport = report;
+      status.textContent = "";
+      renderDossier(report);
+      document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     if (lastShownUrl) URL.revokeObjectURL(lastShownUrl);
     report.photoUrl = lastShownUrl = report.photo ? URL.createObjectURL(report.photo) : null;
     lastReport = report;
