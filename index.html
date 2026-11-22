@@ -188,7 +188,7 @@
     <div class="stage">
       <section id="drop" aria-labelledby="dropTitle">
         <p id="dropTitle"><b data-i18n="dropTitle"></b></p>
-        <p class="hint">imprint-….jpg + imprint-….proof.json</p>
+        <p class="hint">imprint-….jpg + imprint-….proof.json<br>or a dossier .zip</p>
         <div class="btns">
           <button type="button" class="btn primary" id="pick" data-i18n="pick"></button>
         </div>
@@ -307,8 +307,8 @@ const RPC_TIMEOUT_MS = 15000;
 const I18N = {
   en: {
     heroTitle: 'Is this photo <span>real</span>?',
-    heroLead: "Drop an Imprint proof: the photo and its .proof.json file. Everything is checked right here in your browser. Nothing is uploaded; only the transaction signature is looked up on Solana.",
-    dropTitle: "Drop both files here",
+    heroLead: "Drop an Imprint proof: the photo and its .proof.json file, or a dossier's .zip. Everything is checked right here in your browser. Nothing is uploaded; only the transaction signature is looked up on Solana.",
+    dropTitle: "Drop the files here",
     pick: "Choose files",
     checking: "Checking…",
     needJson: "Add the .proof.json file that came with the photo.",
@@ -415,13 +415,13 @@ const I18N = {
     verified: "verified", selfSigned: "self-signed", unverified: "unverified", failed: "failed",
     useTitle: "How to check a proof",
     useMine: "You took the photo",
-    useM1t: "Open it in Imprint", useM1: "On your Seeker, go to Journal and tap the photo.",
-    useM2t: "Save both files", useM2: "Tap “Save photo + proof to phone”. The photo (.jpg) and its proof (.proof.json) land in Download/Imprint.",
-    useM3t: "Send both files", useM3: "Send the photo and its .proof.json together. A proof contains the exact place: share it only with people you trust.",
+    useM1t: "Open it in Imprint", useM1: "On your Seeker, go to Journal and tap the photo, or the dossier.",
+    useM2t: "Save the files", useM2: "Tap “Save photo + proof to phone”: the photo (.jpg) and its proof (.proof.json) land in Download/Imprint. For a dossier, tap “Export dossier”: one .zip holds every photo and its proof.",
+    useM3t: "Send them", useM3: "Send the photo and its .proof.json together, or the dossier's .zip as it is. A proof contains the exact place: share it only with people you trust.",
     useTheirs: "Someone sent you a proof",
-    useT1t: "Keep both files", useT1: "Save the photo and its .proof.json on your phone or computer. One without the other can't be checked.",
-    useT2t: "Drop them here", useT2: "Drop both files on the round stamp above, or tap “Choose files” and select both.",
-    useT3t: "Read the verdict", useT3: "“Authentic” in green means all five checks passed. Any other verdict says what is not proven.",
+    useT1t: "Keep the files", useT1: "Save the photo and its .proof.json, or the dossier's .zip, on your phone or computer. A photo without its proof can't be checked.",
+    useT2t: "Drop them here", useT2: "Drop the files, or the .zip, on the round stamp above, or tap “Choose files” and select them.",
+    useT3t: "Read the verdict", useT3: "“Authentic” in green means all five checks passed. For a dossier, “Authentic dossier” means every photo passed and none is missing or added. Any other verdict says what is not proven.",
     howTitle: "What is checked",
     how1t: "The photo", how1: "Its SHA-256 fingerprint must match the one signed at capture.",
     how2t: "The readings", how2: "Time, GPS, compass, barometer, light, sound, motion and NFC are hashed together with the photo. The phone also records whether the GPS position was simulated, and how long before the photo it was measured.",
