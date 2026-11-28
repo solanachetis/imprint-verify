@@ -731,6 +731,108 @@ const revocationsAgeDays = () => (Date.now() - Date.parse(revocations.date + "T0
 
 /* ---------- Solana ---------- */
 
+// AllDomains (.skr Seeker ID) MainDomain lookup on Solana Mainnet (zero dependencies, 2 getAccountInfo calls).
+const TLD_HOUSE_PROGRAM = "TLDHkysf5pCnKsVA4gXpNvmy7psXLPEu4LAdDJthT9S";
+const MAIN_DOMAIN_DISC = [109, 239, 227, 199, 98, 226, 66, 175];
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function b58dec(s) {
+  let n = 0n;
+  for (const ch of s) { const i = B58.indexOf(ch); if (i < 0) return null; n = n * 58n + BigInt(i); }
+  const out = [];
+  while (n > 0n) { out.push(Number(n & 255n)); n >>= 8n; }
+  for (const ch of s) { if (ch === "1") out.push(0); else break; }
+  out.reverse();
+  return new Uint8Array(out);
+}
+function b58enc(bytes) {
+  let n = 0n;
+  for (const b of bytes) n = (n << 8n) | BigInt(b);
+  let s = "";
+  while (n > 0n) { s = B58[Number(n % 58n)] + s; n /= 58n; }
+  for (const b of bytes) { if (b) break; s = "1" + s; }
+  return s;
+}
+const ED_P = (1n << 255n) - 19n;
+const edMod = (a) => ((a % ED_P) + ED_P) % ED_P;
+function edPow(base, exp) {
+  let r = 1n, b = edMod(base), e = exp;
+  while (e > 0n) { if (e & 1n) r = edMod(r * b); b = edMod(b * b); e >>= 1n; }
+  return r;
+}
+const ED_D = edMod(-121665n * edPow(121666n, ED_P - 2n));
+function isOnEd25519Curve(bytes) {
+  if (bytes.length !== 32) return false;
+  let y = 0n;
+  for (let i = 0; i < 32; i++) y |= BigInt(bytes[i]) << BigInt(8 * i);
+  y &= (1n << 255n) - 1n;
+  if (y >= ED_P) return false;
+  const y2 = edMod(y * y);
+  const x2 = edMod(edMod(y2 - 1n) * edPow(edMod(ED_D * y2 + 1n), ED_P - 2n));
+  return x2 === 0n || edPow(x2, (ED_P - 1n) >> 1n) === 1n;
+}
+async function findPda(seeds, progId) {
+  const prog = b58dec(progId);
+  const marker = new TextEncoder().encode("ProgramDerivedAddress");
+  const baseLen = seeds.reduce((a, s) => a + s.length, 0);
+  const buf = new Uint8Array(baseLen + 1 + prog.length + marker.length);
+  let o = 0;
+  for (const s of seeds) { buf.set(s, o); o += s.length; }
+  const bumpAt = o++;
+  buf.set(prog, o); o += prog.length;
+  buf.set(marker, o);
+  for (let bump = 255; bump >= 0; bump--) {
+    buf[bumpAt] = bump;
+    const d = new Uint8Array(await crypto.subtle.digest("SHA-256", buf));
+    if (!isOnEd25519Curve(d)) return b58enc(d);
+  }
+  return null;
+}
+async function fetchMainnetAccount(pubkey) {
+  const custom = document.getElementById("rpc").value.trim();
+  const list = [...RPCS.mainnet];
+  if (/^https:\/\/[^\s/]+/.test(custom)) list.push(custom);
+  for (const url of list) {
+    try {
+      const r = await rpcCall(url, "getAccountInfo", [pubkey, { encoding: "base64" }]);
+      return r && r.value && Array.isArray(r.value.data) ? b64(r.value.data[0]) : null;
+    } catch (_) {}
+  }
+  return null;
+}
+async function resolveSkrDomain(wallet) {
+  if (typeof wallet !== "string" || !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(wallet)) return null;
+  try {
+    const ownerBytes = b58dec(wallet);
+    if (!ownerBytes || ownerBytes.length !== 32) return null;
+    const pda = await findPda([new TextEncoder().encode("main_domain"), ownerBytes], TLD_HOUSE_PROGRAM);
+    if (!pda) return null;
+    const data = await fetchMainnetAccount(pda);
+    if (!data || data.length < 48) return null;
+    for (let i = 0; i < 8; i++) if (data[i] !== MAIN_DOMAIN_DISC[i]) return null;
+    const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    const nameAccount = b58enc(data.subarray(8, 40));
+    const tldLen = dv.getUint32(40, true);
+    if (44 + tldLen + 4 > data.length) return null;
+    const tld = new TextDecoder().decode(data.subarray(44, 44 + tldLen));
+    if (tld.toLowerCase() !== ".skr") return null;
+    const domOff = 44 + tldLen;
+    const domLen = dv.getUint32(domOff, true);
+    if (domOff + 4 + domLen > data.length) return null;
+    const domain = new TextDecoder().decode(data.subarray(domOff + 4, domOff + 4 + domLen));
+    if (!/^[a-z0-9_-]{1,64}$/i.test(domain)) return null;
+    // Verify the wallet still owns the underlying NameRecordHeader and it has not expired.
+    const rec = await fetchMainnetAccount(nameAccount);
+    if (!rec || rec.length < 112) return null;
+    if (b58enc(rec.subarray(40, 72)) !== wallet) return null;
+    const rdv = new DataView(rec.buffer, rec.byteOffset, rec.byteLength);
+    const exp = rdv.getBigUint64(104, true);
+    if (exp !== 0n && exp * 1000n < BigInt(Date.now())) return null;
+    return domain + ".skr";
+  } catch (_) {
+    return null;
+  }
+}
+
 async function rpcCall(url, method, params) {
   const res = await fetch(url, {
     method: "POST",
@@ -1038,8 +1140,9 @@ async function verify(files) {
 
   // The seal is checked against the hash we computed, never against the one the file claims.
   checks.chain = await checkChain(proof.solana, payloadHash);
+  const skrDomain = typeof payload.wallet === "string" ? await resolveSkrDomain(payload.wallet) : null;
 
-  return { proof, payload, payloadHash, photo, checks };
+  return { proof, payload, payloadHash, photo, checks, skrDomain };
 }
 
 /* ---------- Rendering (text only: proof content never becomes HTML) ---------- */
@@ -1185,7 +1288,9 @@ function render(r) {
     [t("ble"), isNum(payload.ble) ? String(payload.ble) : null],
     [t("nfc"), nfc ? h("span", { class: "mono" }, String(nfc.uid || "") + (nfc.content ? " · " + String(nfc.content).slice(0, 256) : "")) : null],
     [t("device"), device.model ? String(device.model) + (isNum(device.sdk) ? " · API " + device.sdk : "") : null],
-    [t("wallet"), typeof payload.wallet === "string" ? h("span", null, link(explorerAddr(payload.wallet, chainInfo?.network), short(payload.wallet)),
+    [t("wallet"), typeof payload.wallet === "string" ? h("span", null,
+      r.skrDomain ? h("b", null, link(explorerAddr(payload.wallet, chainInfo?.network), r.skrDomain)) : null,
+      r.skrDomain ? " (" + short(payload.wallet) + ")" : link(explorerAddr(payload.wallet, chainInfo?.network), short(payload.wallet)),
       walletSigned === false ? h("b", { class: "fail-t" }, " ⚠ " + t("walletNotSigner")) : null) : null],
     [t(proven ? "seekerClaim" : "seekerDeclared"), typeof payload.sgt === "boolean"
       ? (!payload.sgt ? t("no") : walletSigned === false ? h("span", { class: "warn-t" }, t("seekerUnproven")) : t("yes")) : null],
