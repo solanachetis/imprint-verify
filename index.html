@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' blob: data:; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' blob: data:; media-src 'self'; font-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' https:; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Imprint Verify</title>
 <meta name="description" content="Verify an Imprint proof: photo, sensor readings, phone chip signature and Solana seal, checked in your browser.">
@@ -47,10 +47,24 @@
   ::selection { background: var(--purple); color: #fff; }
   a { color: var(--purple); text-underline-offset: 3px; }
   .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 0; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; }
   .brand small { font: 700 13px var(--narrow); text-transform: uppercase; letter-spacing: .08em; color: var(--purple); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
   header a { font-weight: 600; font-size: 14px; text-decoration: none; }
+  .lang-switch { display: inline-flex; border: 1.5px solid var(--outline); border-radius: 999px; background: rgba(246,241,249,.9); overflow: hidden; }
+  .lang-switch button { border: 0; background: transparent; color: var(--muted); font: 700 12px var(--narrow); letter-spacing: .08em; padding: 5px 10px; cursor: pointer; }
+  .lang-switch button.on { background: var(--purple); color: #fff; }
+  .print-bar { display: flex; justify-content: flex-end; margin-top: 14px; }
+  .print-bar .btn { height: 38px; padding: 0 16px; font-size: 14px; }
+  .video-card { padding: 14px; }
+  .video-card video { display: block; width: 100%; border-radius: 10px; background: var(--navy); aspect-ratio: 16 / 9; }
+  @media print {
+    body { background: #fff !important; background-image: none !important; }
+    header .nav-right, h1, .lead, .store, .stage, .demo-bar, #use, #how, #video, .meta-box, footer, .print-bar, .linkbtn { display: none !important; }
+    #results { margin-top: 0 !important; }
+    .card, .verdict { background: #fff !important; break-inside: avoid; }
+  }
   h1 { font-size: clamp(34px, 6vw, 58px); font-weight: 800; line-height: 1.02; margin: 12px 0 12px; letter-spacing: -.03em; text-align: center; }
   h1 span { color: var(--purple); }
   .lead { color: var(--muted); max-width: 56ch; margin: 0 auto; text-align: center; }
@@ -205,7 +219,13 @@
       </svg>
       Imprint <small>Verify</small>
     </div>
-    <a href="#how" data-i18n="howTitle"></a>
+    <div class="nav-right">
+      <a href="#how" data-i18n="howTitle"></a>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" id="langEn" class="on">EN</button>
+        <button type="button" id="langFr">FR</button>
+      </div>
+    </div>
   </header>
 
   <main>
@@ -286,6 +306,13 @@
         <li class="card"><i>5</i><b data-i18n="how5t"></b><span data-i18n="how5"></span></li>
       </ol>
     </section>
+    <section id="video">
+      <h2 data-i18n="videoTitle"></h2>
+      <div class="card video-card">
+        <video src="demo/imprint-promo-en.mp4" poster="og-card.png" controls preload="none" playsinline></video>
+      </div>
+    </section>
+
     <div class="card meta-box">
       <p class="note" data-i18n="privacy"></p>
 
@@ -301,7 +328,7 @@
   </main>
 </div>
 <footer>
-  <span data-i18n="footer"></span> · <a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms of use</a> · © 2026 SolanaChetis
+  <span data-i18n="footer"></span> · <a href="https://github.com/solanachetis/imprint-verify" target="_blank" rel="noopener noreferrer" data-i18n="openSource"></a> · <a href="privacy.html" data-i18n="privacyLink"></a> · <a href="terms.html" data-i18n="termsLink"></a> · © 2026 SolanaChetis
 </footer>
 <script>
 "use strict";
@@ -507,15 +534,183 @@ const I18N = {
     dCompleteVal: "No photo removed or added",
     dBack: "← Back to the dossier",
     dHint: "Tap a photo to see its own checks and readings.",
+    printReport: "Print / Save PDF",
+    videoTitle: "See Imprint in 45 seconds",
+    openSource: "Open-source code",
+    privacyLink: "Privacy policy",
+    termsLink: "Terms of use",
+  },
+  fr: {
+    heroTitle: 'Cette photo est-elle <span>vraie</span> ?',
+    heroLead: "Déposez une preuve Imprint : la photo et son fichier .proof.json, ou le .zip d'un dossier. Tout est vérifié ici dans votre navigateur. Rien n'est envoyé sur un serveur ; seule la signature de transaction est vérifiée sur Solana.",
+    dropTitle: "Déposez les fichiers ici",
+    pick: "Choisir des fichiers",
+    storeSmall: "Bientôt sur le", storeBig: "Solana dApp Store",
+    demoLabel: "Pas de preuve sous la main ? Essayez une vraie photo Seeker (sans GPS)",
+    demoReal: "Tester une vraie preuve",
+    demoTamper: "Modifier 1 octet",
+    demoErr: "Impossible de charger la preuve exemple.",
+    checking: "Vérification…",
+    needJson: "Ajoutez le fichier .proof.json fourni avec la photo.",
+    badJson: "Ce fichier n'est pas une preuve Imprint.",
+    photoOk: "Photo intacte",
+    photoWhy: "L'empreinte SHA-256 de la photo correspond exactement à celle signée lors de la prise. Un seul pixel modifié casse la correspondance.",
+    payloadOk: "Mesures intactes",
+    payloadWhy: "La date, le lieu et les capteurs sont exactement ceux enregistrés au moment de la photo.",
+    sigOk: "Signature valide",
+    sigWhy: "La photo et ses mesures sont signées par la clé de l'appareil (ECDSA P-256). La ligne suivante indique si cette clé vit dans une vraie puce matérielle.",
+    attOk: "Puce matérielle authentique",
+    attWhy: "Google certifie que la clé de signature a été créée par l'application officielle Imprint dans la puce sécurisée d'un vrai téléphone non modifié, sans jamais pouvoir en sortir.",
+    chainOk: "Scellé sur Solana",
+    chainWhy: "L'empreinte est inscrite dans une transaction Solana confirmée : la photo existait au plus tard à l'heure de ce bloc.",
+    sOk: "Vérifié", sFail: "Échec", sNone: "Non vérifié",
+    photoMissing: "Photo non fournie : ajoutez le fichier .jpg pour la vérifier.",
+    photoMismatch: "La photo ne correspond pas à la preuve : elle a été modifiée ou c'est une autre photo.",
+    payloadMismatch: "Les mesures ont été modifiées après la capture.",
+    sigBad: "Signature invalide : la preuve a été falsifiée ou altérée.",
+    attNone: "Aucun certificat matériel dans cette preuve.",
+    attBad: "Le certificat matériel est invalide : {0}",
+    attStructure: "la chaîne de certificats est malformée",
+    attUnknownRoot: "La chaîne ne remonte pas à une racine Google : fabricant non reconnu.",
+    attFactory: "Ce certificat provient d'une clé installée en usine (ancienne racine Google). Ces clés peuvent fuiter : la puce n'est pas confirmée.",
+    attRevoked: "Google a révoqué un certificat de cette chaîne (clé compromise).",
+    attApp: "la clé a été créée par une autre application qu'Imprint",
+    attModified: "Le téléphone est modifié (bootloader déverrouillé ou système non vérifié) : ses mesures ne sont pas garanties.",
+    attKey: "il certifie une autre clé",
+    attChallenge: "il n'a pas été émis pour Imprint",
+    attSoftware: "la clé n'est pas matérielle",
+    attBroken: "une signature de la chaîne est invalide",
+    chainNone: "Cette preuve n'a pas été scellée sur Solana : sa date n'est pas garantie.",
+    chainNotFound: "Transaction introuvable sur les nœuds Solana interrogés. Ouvrez-la dans l'explorateur pour vérifier le mémo.",
+    chainFailed: "La transaction a échoué sur Solana.",
+    chainMemo: "La transaction ne contient pas cette empreinte.",
+    chainRpc: "Impossible de joindre Solana. Réessayez dans un instant.",
+    vAuth: "Authentique",
+    vAuthSub: "La photo et ses mesures sont intactes, signées par la puce d'un vrai téléphone et scellées sur Solana{0}.",
+    vIntact: "Origine non prouvée",
+    vIntactSub: "La photo et ses mesures n'ont pas changé depuis la signature et sont scellées sur Solana{0}, mais rien ne prouve qu'elles viennent d'Imprint sur un vrai téléphone.",
+    vMock: "Position simulée",
+    vMockSub: "Le reste est valide, mais le téléphone a signalé cette position comme simulée (faux GPS) : le lieu n'est pas prouvé.",
+    mockPlace: "simulée par une appli",
+    vOld: "Ancienne version de l'app",
+    vOldSub: "Cette preuve vient d'une ancienne version d'Imprint qui n'enregistrait pas les contrôles de position simulée ou d'horloge.",
+    vClockAfter: "Heure de capture impossible",
+    vClockAfterSub: "Le téléphone indique une prise après le scellement sur Solana : seule l'heure du bloc Solana est garantie.",
+    vClockManual: "Heure de capture non prouvée",
+    vClockManualSub: "L'horloge du téléphone était réglée manuellement sans comparaison satellite : seule l'heure du bloc Solana est garantie.",
+    vCustom: "Sceau vu uniquement par votre nœud",
+    vCustomSub: "Seul le nœud Solana personnalisé ({0}) a renvoyé cette transaction.",
+    declared: "déclarées, non prouvées",
+    declaredNote: "Sans puce certifiée, ces valeurs sont seulement ce que déclare le fichier.",
+    seekerDeclared: "Seeker Genesis Token (déclaré)",
+    revokedOld: "Liste de révocation du {0} (> 14 jours).",
+    framed: "Par sécurité, ce vérificateur ne fonctionne pas dans un cadre externe. Ouvrez-le directement :",
+    vStale: "Position ancienne",
+    vStaleSub: "La position a été mesurée {0} avant la photo : le lieu exact n'est pas prouvé.",
+    stalePlace: "position ancienne",
+    fixSource: "Source de la position", fixVal: "{0}, mesurée {1} avant la photo",
+    srcGps: "satellites (GPS)", srcNetwork: "Wi-Fi / antennes", srcFused: "GPS + Wi-Fi",
+    vClock: "Heure de capture douteuse",
+    vClockSub: "L'horloge du téléphone ne correspondait pas à l'heure satellite : seule l'heure du bloc Solana est garantie.",
+    clock: "Horloge du téléphone", clockOk: "alignée sur les satellites (écart {0})", clockOff: "décalée de {0} par rapport aux satellites", clockManual: "réglée à la main", clockUnknown: "non vérifiée (pas de signal satellite)",
+    momentManual: "lancé manuellement, pas par la surprise",
+    walletNotSigner: "n'a pas signé le sceau", seekerUnproven: "non prouvé : ce wallet n'a pas signé le sceau",
+    seekerClaim: "Seeker Genesis Token (vérifié par l'app)",
+    fee: "Frais Imprint", feeSkr: "{0} SKR brûlés · {1} SKR vers Imprint", feeSol: "{0} SOL vers Imprint", feeNone: "aucun",
+    vNotFound: "Sceau à confirmer",
+    vNotFoundSub: "La preuve est intacte, mais le nœud Solana n'a pas renvoyé la transaction.",
+    vDevnet: "Scellé sur le réseau de test",
+    vDevnetSub: "La preuve est intacte mais scellée sur devnet : ce n'est pas une preuve durable.",
+    onDate: " le {0}",
+    memo: "Mémo attendu",
+    revokedNote: "Liste de révocation : copie Google du {0}.",
+    vUnsealed: "Signé, non scellé",
+    vUnsealedSub: "La preuve est intacte mais pas inscrite sur Solana : sa date n'est pas garantie.",
+    vNoPhoto: "Photo manquante",
+    vNoPhotoSub: "La preuve est valide. Ajoutez la photo pour terminer la vérification.",
+    vFail: "Non authentique",
+    vFailSub: "Quelque chose a été modifié ou ne correspond pas. Détails ci-dessous.",
+    vRpc: "Sceau pas encore vérifié",
+    vRpcSub: "La preuve est intacte, mais Solana n'a pas pu être joint.",
+    capture: "Prise le",
+    captureNote: "Heure, lieu et capteurs enregistrés et signés par le téléphone.",
+    limitsTitle: "Ce que prouve ce fichier",
+    limitsProvenT: "Prouvé", limitsProven: "Cette photo et ses capteurs ont été signés par la puce du téléphone à la prise, et Solana date leur empreinte. Un pixel changé fait échouer la vérification.",
+    limitsFlaggedT: "Signalé, pas bloqué", limitsFlagged: "Une position simulée, une position vieille de plus de 2 minutes ou une horloge décalée est signalée en avertissement ci-dessus.",
+    limitsNotT: "Non prouvé", limitsNot: "Que la scène n'a pas été mise en scène ni qui tenait le téléphone : la preuve identifie un appareil, pas une personne.",
+    place: "Lieu", accuracy: "précision", altitude: "Altitude", satellites: "Satellites",
+    pressure: "Pression", baro: "Altitude barométrique", light: "Lumière", sound: "Son",
+    heading: "Cap", tilt: "Inclinaison", magnetic: "Champ magnétique", battery: "Température batterie",
+    accel: "Accélération", gyro: "Rotation", steps: "Pas depuis démarrage", ble: "Appareils Bluetooth proches",
+    nfc: "Tag NFC", device: "Appareil", wallet: "Wallet", seeker: "Seeker Genesis Token",
+    moment: "Moment du jour", momentVal: "pris {0} après la notification",
+    yes: "oui", no: "non", map: "carte", showPlace: "Afficher le lieu",
+    readings: "Mesures", solana: "Solana", hardware: "Puce du téléphone",
+    network: "Réseau", block: "Bloc", blockTime: "Heure du bloc", signer: "Signé par",
+    delay: "Scellé", delayVal: "{0} après la capture", delayBefore: "Horloge du téléphone en avance de {0}",
+    explorer: "Ouvrir dans l'explorateur", via: "Nœud Solana : {0}",
+    level: "Stockage de la clé", boot: "Démarrage vérifié", locked: "Bootloader verrouillé", os: "Android",
+    patch: "Correctif sécurité", app: "Créé par", appOfficial: "application officielle Imprint", appOther: "autre application",
+    root: "Racine de confiance", chainLen: "{0} certificats",
+    verified: "vérifié", selfSigned: "auto-signé", unverified: "non vérifié", failed: "échec",
+    useTitle: "Comment vérifier une preuve",
+    useMine: "Vous avez pris la photo",
+    useM1t: "Ouvrez-la dans Imprint", useM1: "Sur votre Seeker, allez dans Journal et touchez la photo ou le dossier.",
+    useM2t: "Enregistrez les fichiers", useM2: "Touchez « Save photo + proof to phone » (dans Download/Imprint), ou « Export dossier » pour un .zip complet.",
+    useM3t: "Envoyez-les", useM3: "Envoyez la photo et son .proof.json ensemble, ou le .zip du dossier tel quel. Une preuve avec GPS contient le lieu exact.",
+    useTheirs: "On vous a envoyé une preuve",
+    useT1t: "Gardez les fichiers", useT1: "Enregistrez la photo et son .proof.json, ou le .zip du dossier. Une photo sans sa preuve ne peut pas être vérifiée.",
+    useT2t: "Déposez-les ici", useT2: "Glissez les fichiers ou le .zip sur le tampon rond ci-dessus, ou cliquez sur « Choisir des fichiers ».",
+    useT3t: "Lisez le verdict", useT3: "« Authentique » en vert signifie que les 5 contrôles sont validés. Tout autre verdict précise ce qui n'est pas prouvé.",
+    howTitle: "Ce qui est vérifié",
+    how1t: "La photo", how1: "Son empreinte SHA-256 doit correspondre exactement à celle signée lors de la capture.",
+    how2t: "Les mesures", how2: "Heure, GPS, boussole, baromètre, lumière, son, mouvement et NFC sont scellés avec la photo.",
+    how3t: "La signature", how3: "La puce sécurisée du téléphone signe l'empreinte. La clé privée ne quitte jamais la puce.",
+    how4t: "La puce elle-même", how4: "Une chaîne de certificats Google prouve que la clé vient d'un vrai téléphone non modifié et de l'app officielle Imprint.",
+    how5t: "Le sceau Solana", how5: "L'empreinte est inscrite dans un mémo Solana : l'heure du bloc prouve que la photo existait au plus tard à ce moment.",
+    privacy: "Confidentialité : les fichiers ne quittent jamais votre appareil. La seule requête réseau interroge un nœud Solana pour vérifier la transaction. Ni le GPS ni la photo ne sont écrits sur la blockchain.",
+    advanced: "Avancé : utiliser votre propre RPC Solana",
+    rpcHelp: "Optionnel. Un endpoint mainnet https:// compatible navigateur. Utilisé uniquement si les nœuds par défaut ne trouvent pas la transaction.",
+    footer: "Imprint · Des photos dont on peut prouver l'authenticité, depuis le Solana Seeker",
+    rezipped: "Ce fichier a été re-zippé. Envoyez le .zip d'origine exporté par Imprint.",
+    lonePhoto: "Cette photo appartient à un dossier : déposez le .zip complet du dossier.",
+    badZip: "Ce .zip est endommagé ou incohérent. Envoyez le .zip d'origine d'Imprint.",
+    dAuth: "Dossier authentique : {0} photos",
+    dAuthSub: "Chaque photo et ses mesures sont intactes, signées par la puce d'un vrai téléphone et scellées ensemble sur Solana{0}.",
+    dUnsealedSub: "Les photos sont intactes mais le dossier n'est pas scellé sur Solana.",
+    dIntactSub: "Les photos n'ont pas changé mais rien ne prouve qu'elles viennent d'Imprint sur un vrai téléphone.",
+    dWarn: "Vérifiez les photos signalées",
+    dWarnSub: "Le dossier est complet et scellé, mais certaines photos portent un avertissement (position ou horloge).",
+    dMissing: "Il manque une photo dans le dossier.",
+    dAdded: "Une photo a été ajoutée hors de la liste du dossier.",
+    dChanged: "Une photo a été modifiée après sa signature.",
+    dOtherPhone: "Une photo provient d'un autre téléphone que le dossier.",
+    dSealMismatch: "Le sceau ne correspond pas à ce dossier.",
+    dListChanged: "La liste des photos du dossier a été modifiée.",
+    dDup: "Le dossier liste deux fois la même photo.",
+    dSealed: "Scellé sur Solana",
+    dTaken: "Photos prises",
+    dTakenVal: "entre {0} et {1}",
+    dComplete: "Intégralité",
+    dCompleteVal: "Aucune photo ajoutée ni retirée",
+    dBack: "← Retour au dossier",
+    dHint: "Touchez une photo pour voir ses contrôles et ses capteurs.",
+    printReport: "Imprimer / Enregistrer PDF",
+    videoTitle: "Découvrir Imprint en 45 secondes",
+    openSource: "Code open-source",
+    privacyLink: "Confidentialité",
+    termsLink: "Conditions d'utilisation",
   },
 };
 
-// English only.
-const lang = "en";
+let lang = "en";
 const t = (key, ...args) => (I18N[lang][key] ?? I18N.en[key] ?? key).replace(/\{(\d)\}/g, (_, i) => args[i] ?? "");
 
 function applyLang() {
   document.documentElement.lang = lang;
+  const enBtn = document.getElementById("langEn");
+  const frBtn = document.getElementById("langFr");
+  if (enBtn && frBtn) { enBtn.classList.toggle("on", lang === "en"); frBtn.classList.toggle("on", lang === "fr"); }
   for (const el of document.querySelectorAll("[data-i18n]")) {
     const key = el.dataset.i18n;
     if (key === "heroTitle") {
@@ -1083,6 +1278,9 @@ function renderDossier(r) {
     grid.append(tile);
   }
   root.append(h("div", { class: "card" }, kv(rows), grid, h("p", { class: "why" }, t("dHint"))));
+  const printBtn = h("button", { type: "button", class: "btn ghost" }, t("printReport"));
+  printBtn.addEventListener("click", () => window.print());
+  root.append(h("div", { class: "print-bar" }, printBtn));
   root.classList.add("on");
 }
 
@@ -1365,6 +1563,9 @@ function render(r) {
       limit("amber", "limitsFlaggedT", "limitsFlagged"),
       limit("muted", "limitsNotT", "limitsNot")], { id: "limits" }));
   }
+  const printBtn = h("button", { type: "button", class: "btn ghost" }, t("printReport"));
+  printBtn.addEventListener("click", () => window.print());
+  root.append(h("div", { class: "print-bar" }, printBtn));
   root.classList.add("on");
   // The five checks above already say what was verified: the explanation below would only repeat them.
   document.getElementById("how").hidden = true;
@@ -1475,6 +1676,8 @@ async function runDemo(tamper) {
 }
 document.getElementById("demoReal").addEventListener("click", () => runDemo(false));
 document.getElementById("demoTamper").addEventListener("click", () => runDemo(true));
+document.getElementById("langEn").addEventListener("click", () => { lang = "en"; applyLang(); });
+document.getElementById("langFr").addEventListener("click", () => { lang = "fr"; applyLang(); });
 let dragDepth = 0;
 window.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; drop.classList.add("over"); });
 window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; drop.classList.remove("over"); } });
