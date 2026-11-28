@@ -75,7 +75,12 @@
   .btn { border: 0; border-radius: 999px; padding: 0 20px; height: 46px; font: inherit; font-weight: 700; cursor: pointer; }
   .btn.primary { background: var(--purple); color: #fff; }
   .btn.ghost { background: rgba(255,255,255,.6); color: var(--purple); border: 2px solid var(--purple); }
+  .btn.ghost.danger { color: var(--danger); border-color: var(--danger); }
   .btn:hover { filter: brightness(1.08); }
+  .demo-bar { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 22px; text-align: center; }
+  .demo-bar small { font: 700 12px var(--narrow); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+  .demo-bar .btns { margin-top: 0; }
+  .demo-bar .btn { height: 40px; padding: 0 16px; font-size: 14px; }
   .btn:focus-visible, summary:focus-visible, .linkbtn:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
   #status { color: var(--muted); text-align: center; min-height: 22px; margin: 8px 0 0; font-size: 14px; }
   #status.err { color: var(--danger); }
@@ -237,6 +242,14 @@
       </div>
     </div>
 
+    <div class="demo-bar">
+      <small data-i18n="demoLabel"></small>
+      <div class="btns">
+        <button type="button" class="btn ghost" id="demoReal" data-i18n="demoReal"></button>
+        <button type="button" class="btn ghost danger" id="demoTamper" data-i18n="demoTamper"></button>
+      </div>
+    </div>
+
     <section id="results" aria-live="polite"></section>
 
     <!-- Explains the five checks before a proof is dropped; hidden once a result shows them. -->
@@ -345,6 +358,10 @@ const I18N = {
     dropTitle: "Drop the files here",
     pick: "Choose files",
     storeSmall: "Coming soon on the", storeBig: "Solana dApp Store",
+    demoLabel: "No Imprint proof handy? Try a real Seeker photo (no GPS)",
+    demoReal: "Try a real proof",
+    demoTamper: "Tamper 1 byte",
+    demoErr: "Could not load the sample proof.",
     checking: "Checking…",
     needJson: "Add the .proof.json file that came with the photo.",
     badJson: "This file is not an Imprint proof.",
@@ -1327,6 +1344,32 @@ const drop = document.getElementById("drop");
 const input = document.getElementById("file");
 document.getElementById("pick").addEventListener("click", () => input.click());
 input.addEventListener("change", () => { if (input.files.length) run([...input.files]); input.value = ""; });
+
+// Built-in demo: a real Seeker mainnet proof taken with GPS off. "Tamper 1 byte" flips a single bit near the end
+// of the JPEG so the picture still looks identical, while the SHA-256 check fails immediately.
+const DEMO_PHOTO = "imprint-mx0ufmq7-pnw4z.jpg";
+const DEMO_JSON = "imprint-mx0ufmq7-pnw4z.proof.json";
+async function runDemo(tamper) {
+  if (framed) return;
+  status.className = "";
+  status.textContent = t("checking");
+  try {
+    const [photoRes, jsonRes] = await Promise.all([fetch("demo/" + DEMO_PHOTO), fetch("demo/" + DEMO_JSON)]);
+    if (!photoRes.ok || !jsonRes.ok) throw new Error(t("demoErr"));
+    const photoBytes = new Uint8Array(await photoRes.arrayBuffer());
+    if (tamper && photoBytes.length > 32) photoBytes[photoBytes.length - 16] ^= 1;
+    const jsonBytes = await jsonRes.arrayBuffer();
+    run([
+      new File([photoBytes], DEMO_PHOTO, { type: "image/jpeg" }),
+      new File([jsonBytes], DEMO_JSON, { type: "application/json" }),
+    ]);
+  } catch (e) {
+    status.className = "err";
+    status.textContent = e.message || t("demoErr");
+  }
+}
+document.getElementById("demoReal").addEventListener("click", () => runDemo(false));
+document.getElementById("demoTamper").addEventListener("click", () => runDemo(true));
 let dragDepth = 0;
 window.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; drop.classList.add("over"); });
 window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; drop.classList.remove("over"); } });

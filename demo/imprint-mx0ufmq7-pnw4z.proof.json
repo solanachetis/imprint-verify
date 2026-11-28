@@ -1,0 +1,40 @@
+{
+  "format": "imprint-proof\/1",
+  "payload_raw": "{\"v\":1,\"app\":\"imprint\",\"t\":1795896544975,\"photo\":\"8d0f4429341e2ea31ed39a28dfd8d1ea142665539d0c44b3549e2c8776ba0018\",\"loc\":null,\"env\":{\"hpa\":1005.05,\"baro_alt\":68.5,\"lux\":6,\"db\":34.1,\"heading\":141.4,\"pitch\":-80.1,\"roll\":2.9,\"ut\":119.2,\"batt_c\":24},\"motion\":{\"g\":0.981,\"gyro\":0.017},\"nfc\":null,\"device\":{\"model\":\"Seeker\",\"sdk\":36,\"key\":\"5cb44ca7cfb20fb7a010a7bcf2af17948b34e5be8de70c165eba5128518ec95b\",\"security\":\"STRONGBOX\"},\"clock\":{\"auto\":true,\"gnss_skew_ms\":-941},\"wallet\":\"ExH22MBBZ3qg3Qg5A4uNicxLJTt1Cs1gBjjKK8XngFtM\",\"sgt\":true}",
+  "payload_sha256": "01ff37ed904b6a7aa93962a02e268c24a96e87e324ecc734d7082fa265151938",
+  "photo_file": "imprint-mx0ufmq7-pnw4z.jpg",
+  "photo_sha256": "8d0f4429341e2ea31ed39a28dfd8d1ea142665539d0c44b3549e2c8776ba0018",
+  "device": {
+    "algorithm": "SHA256withECDSA (P-256)",
+    "public_key_x509_b64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6oa+Rzr0M3S\/eShlAfaqavVio0E5S7enMS9UYjsZ5zPbVjxRzyFue5PIaCOUib3GvJjVbgqyuIWDarvPcLTt4g==",
+    "signature_b64": "MEUCIAeSv2vFhEMPvr2vrgBSr4nV8Qg0U9tfWzIeLESq42OUAiEA3H5sYKlVGWiHwIUBRMKkcf6dgciQrvHp1hF3rk8yzQE=",
+    "security_level": "STRONGBOX",
+    "key_attestation_chain_b64": [
+      "MIICmjCCAkCgAwIBAgIBATAKBggqhkjOPQQDAjA\/MRIwEAYDVQQKEwlTdHJvbmdCb3gxKTAnBgNVBAMTIDM3NDdhM2U1NmI0NDE1ZDNjN2Y3OGZmYTUzN2Y4YWQ0MB4XDTcwMDEwMTAwMDAwMFoXDTQ4MDEwMTAwMDAwMFowHzEdMBsGA1UEAxMUQW5kcm9pZCBLZXlzdG9yZSBLZXkwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATqhr5HOvQzdL95KGUB9qpq9WKjQTlLt6cxL1RiOxnnM9tWPFHPIW57k8hoI5SJvca8mNVuCrK4hYNqu89wtO3io4IBSzCCAUcwggEzBgorBgEEAdZ5AgERBIIBIzCCAR8CAgEsCgECAgIBLAoBAgQSaW1wcmludC1kZXZpY2Uta2V5BAAwUr+FPQgCBgGh\/ynj\/r+FRUIEQDA+MRgwFgQRZnIuY2hldGlzLmltcHJpbnQCAQQxIgQg4EtWiW\/+ybHg0CipTbfHFqIl7P6B6m8By1xGdTpabKcwgaShCDEGAgEDAgECogMCAQOjBAICAQClBTEDAgEEqgMCAQG\/g3cCBQC\/hT4DAgEAv4VATDBKBCDrY\/GmAJQCnS5eOWja2v80B\/tCgDlIac3bs+ZL8XrjewEB\/woBAAQgdtn54G17z71YgyYABkp5D39PV\/gFy4\/Vf7yUjcc2ZeS\/hUEFAgMCcQC\/hUIFAgMDF3G\/hU4GAgQBNSgpv4VPBgIEATTYFTAOBgNVHQ8BAQEEBAMCB4AwCgYIKoZIzj0EAwIDSAAwRQIhANTOv+\/eNlpzw4ihwOe4fLL1sS0N3MJKyrLCKJf0rYdxAiAoYaGZxr4UBXquyQXsU3ZPLhIRe5tDRMWy3cyxsAN8bg==",
+      "MIICqTCCAk+gAwIBAgIQN0ej5WtEFdPH94\/6U3+K1DAKBggqhkjOPQQDAjApMRMwEQYDVQQKEwpHb29nbGUgTExDMRIwEAYDVQQDEwlEcm9pZCBDQTMwHhcNMjYxMTE3MDIxNzUyWhcNMjYxMjAxMDI0MzQwWjA\/MRIwEAYDVQQKEwlTdHJvbmdCb3gxKTAnBgNVBAMTIDM3NDdhM2U1NmI0NDE1ZDNjN2Y3OGZmYTUzN2Y4YWQ0MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEz73brYhj2vhiLcyms6t+XtpUsUSO6pOcXviDYbsQ2s8cFTd55m8HaTSG74OJ4cgCDWGXdev6VX5lRJ93Nj7b76OCAUEwggE9MB0GA1UdDgQWBBTTH7XoD8TVHZdxMBkVTBBRYg8BLDAfBgNVHSMEGDAWgBQ8VWzS9GkaPL6Dw1pBqENk\/NPrKjAPBgNVHRMBAf8EBTADAQH\/MA4GA1UdDwEB\/wQEAwICBDCB2QYKKwYBBAHWeQIBHgSByqMBGCADclNvbGFuYSBNb2JpbGUgSW5jLgWlAWhBUFBST1ZFRAJ4QDc2ZDlmOWUwNmQ3YmNmYmQ1ODgzMjYwMDA2NGE3OTBmN2Y0ZjU3ZjgwNWNiOGZkNTdmYmM5NDhkYzczNjY1ZTQDaEFQUFJPVkVEBHhPc29sYW5hbW9iaWxlL3NlZWtlcl9lZWEvc2Vla2VyOjE2L0JQMkEuMjYxMDA4LjEwMC5BMy9tcDFWMTMyMDp1c2VyL3JlbGVhc2Uta2V5cwZlUEhPTkUwCgYIKoZIzj0EAwIDSAAwRQIhAK0w\/ZIFk+gOyoGpkfhDk+3BWrA\/aeitdRB27FhqHQQnAiAUSynuZl5POVoOgMFV\/fYyJbB4Dr5lwhJlCbw4OfLMWw==",
+      "MIIC8DCCAnWgAwIBAgITR7VQ+3gwfNbyi9+CEVmrj4XkGjAKBggqhkjOPQQDAzApMRMwEQYDVQQKEwpHb29nbGUgTExDMRIwEAYDVQQDEwlEcm9pZCBDQTIwHhcNMjYxMTE1MDQyOTU2WhcNMjcwMTI0MDQyOTU1WjApMRMwEQYDVQQKEwpHb29nbGUgTExDMRIwEAYDVQQDEwlEcm9pZCBDQTMwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAR6Hqip31SnF1PNorfejFqo6ftylTdFosLHlQcKMVZ6sEDshLHr2Ub8hXr2Ay8p\/B5N6LvVFfgzc89xRUcl6UeMo4IBejCCAXYwDgYDVR0PAQH\/BAQDAgIEMA8GA1UdEwEB\/wQFMAMBAf8wHQYDVR0OBBYEFDxVbNL0aRo8voPDWkGoQ2T80+sqMB8GA1UdIwQYMBaAFMzKUIZMa9tKBuql7EwrS2Js212TMIGNBggrBgEFBQcBAQSBgDB+MHwGCCsGAQUFBzAChnBodHRwOi8vcHJpdmF0ZWNhLWNvbnRlbnQtNjk4ZTEwNzEtMDAwMC0yMjc2LWJkMTAtODgzZDI0ZjJlNjdjLnN0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vNDE2N2QwY2M4NzQ0MGI2MzUwNTAvY2EuY3J0MIGCBgNVHR8EezB5MHegdaBzhnFodHRwOi8vcHJpdmF0ZWNhLWNvbnRlbnQtNjk4ZTEwNzEtMDAwMC0yMjc2LWJkMTAtODgzZDI0ZjJlNjdjLnN0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vNDE2N2QwY2M4NzQ0MGI2MzUwNTAvY3JsLmNybDAKBggqhkjOPQQDAwNpADBmAjEA3Umox2ZETuW6t99Sas25trojFH1r6c\/tFvEKKKtZEl5ytY3zX1IJbPy0GBfBDJJOAjEAuSkCa0uizw0nx3yX7O1z3MnvjSrQ0EYjJYuP3iPajSjLyeZEKM2WszmT3UghT\/CQ",
+      "MIICZjCCAeugAwIBAgIRAJJCUBkZA+O6ZTIO\/WoghfswCgYIKoZIzj0EAwMwUjEcMBoGA1UEAwwTS2V5IEF0dGVzdGF0aW9uIENBMTEQMA4GA1UECwwHQW5kcm9pZDETMBEGA1UECgwKR29vZ2xlIExMQzELMAkGA1UEBhMCVVMwHhcNMjYwMjA5MTk1OTE4WhcNMjkwMjA4MTk1OTE4WjApMRMwEQYDVQQKEwpHb29nbGUgTExDMRIwEAYDVQQDEwlEcm9pZCBDQTIwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAARC\/mEw6jlnw7u6Y3iPUoD+niBmQFeHqMWXxFO+uTvgfD3YGRzTqP8Z2XPFg6PFuS1cAmLULwQWegHx10nmqBn7u0IgjwDxFCQRV1oAGLDqvOxBNS5j\/oYHAn9qyT+vsLWjga0wgaowHwYDVR0jBBgwFoAUUjK7LPtGQ5vc1oGpDmVm4DRB6kAwRwYDVR0fBEAwPjA8oDqgOIY2aHR0cHM6Ly9hbmRyb2lkLmdvb2dsZWFwaXMuY29tL2F0dGVzdGF0aW9uL2tleV9jYTEuY3JsMA4GA1UdDwEB\/wQEAwIBBjAdBgNVHQ4EFgQUzMpQhkxr20oG6qXsTCtLYmzbXZMwDwYDVR0TAQH\/BAUwAwEB\/zAKBggqhkjOPQQDAwNpADBmAjEA9NvAWPq1mST9Uj\/1NzxJOcBNWj3lBKBS0ww1CsdIx17MPWJV9+LsbjeSz6QYc1SOAjEAsBfNai09FaG9SgfRCCk3UDT9scDP7+DYqvoQMTGR4\/68u32l2b1oEkEukrwYXHsi",
+      "MIICIjCCAaigAwIBAgIRAISp0Cl7DrWK5\/8OgN52BgUwCgYIKoZIzj0EAwMwUjEcMBoGA1UEAwwTS2V5IEF0dGVzdGF0aW9uIENBMTEQMA4GA1UECwwHQW5kcm9pZDETMBEGA1UECgwKR29vZ2xlIExMQzELMAkGA1UEBhMCVVMwHhcNMjUwNzE3MjIzMjE4WhcNMzUwNzE1MjIzMjE4WjBSMRwwGgYDVQQDDBNLZXkgQXR0ZXN0YXRpb24gQ0ExMRAwDgYDVQQLDAdBbmRyb2lkMRMwEQYDVQQKDApHb29nbGUgTExDMQswCQYDVQQGEwJVUzB2MBAGByqGSM49AgEGBSuBBAAiA2IABCPaI3FO3z5bBQo8cuiEas4HjqCtG\/mLFfRT0MsIssPBEEU5Cfbt6sH5yOAxqEi5QagpU1yX4HwnGb7OtBYpDTB57uH5Eczm34A5FNijV3s0\/f0UPl7zbJcTx6xwqMIRq6NCMEAwDwYDVR0TAQH\/BAUwAwEB\/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFFIyuyz7RkOb3NaBqQ5lZuA0QepAMAoGCCqGSM49BAMDA2gAMGUCMETfjPO\/HwqReR2CS7p0ZWoD\/LHs6hDi422opifHEUaYLxwGlT9SLdjkVpz0UUOR5wIxAIoGyxGKRHVTpqpGRFiJtQEOOTp\/+s1GcxeYuR2zh\/80lQyu9vAFCj6E4AXc+osmRg=="
+    ]
+  },
+  "solana": {
+    "network": "mainnet",
+    "signature": "5V4H7ncpDrxutSWqQejy9AgfiHtftnZQUd9RRVuz9d2otbnvbrPbvXLFmZ2xVne8ySSWYdGCCFSgQkwAsPP6zGeB",
+    "memo": "imprint:v1:sha256:01ff37ed904b6a7aa93962a02e268c24a96e87e324ecc734d7082fa265151938",
+    "wallet": "ExH22MBBZ3qg3Qg5A4uNicxLJTt1Cs1gBjjKK8XngFtM",
+    "slot": 475082712,
+    "block_time": 1795896562,
+    "explorer": "https:\/\/explorer.solana.com\/tx\/5V4H7ncpDrxutSWqQejy9AgfiHtftnZQUd9RRVuz9d2otbnvbrPbvXLFmZ2xVne8ySSWYdGCCFSgQkwAsPP6zGeB"
+  },
+  "how_to_verify": [
+    "sha256(photo file) == photo_sha256 == payload_raw.photo",
+    "sha256(utf8(payload_raw)) == payload_sha256",
+    "ECDSA-P256 verify(public_key, utf8(payload_raw), signature) == true",
+    "Solana transaction memo == 'imprint:v1:sha256:' + payload_sha256"
+  ],
+  "what_it_proves": {
+    "proven": "This photo and its readings were signed at capture by a key held in this phone's StrongBox secure chip, and Solana dates their hash. One changed pixel fails the checks. The web verifier checks the chip's attestation.",
+    "flagged": "A simulated position (payload loc.mock), a position measured more than 2 minutes before the photo (payload loc.age_ms, with its provider in loc.src) or a phone clock that disagrees with GPS time (payload clock) is signed into the proof and shown as a warning, not blocked.",
+    "not_proven": "That the scene is real: Imprint proves what this phone recorded and when, not whether the scene was staged or the camera pointed at a screen. Nor who was holding the phone: the proof names a device, not a person."
+  }
+}
