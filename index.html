@@ -7,6 +7,19 @@
 <meta name="referrer" content="no-referrer">
 <title>Imprint Verify</title>
 <meta name="description" content="Verify an Imprint proof: photo, sensor readings, phone chip signature and Solana seal, checked in your browser.">
+<link rel="canonical" href="https://imprintproof.app/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://imprintproof.app/">
+<meta property="og:site_name" content="Imprint">
+<meta property="og:title" content="Imprint Verify — Is this photo real?">
+<meta property="og:description" content="Drop an Imprint proof (.jpg + .proof.json, or dossier .zip) to check the photo, sensors, phone chip attestation and Solana seal right in your browser.">
+<meta property="og:image" content="https://imprintproof.app/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Imprint Verify — Is this photo real?">
+<meta name="twitter:description" content="Check an Imprint photo proof locally in your browser: SHA-256, sensors, hardware chip attestation and Solana seal.">
+<meta name="twitter:image" content="https://imprintproof.app/og-card.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='24 24 60 60'%3E%3Cpath d='M29.57,45.11 A26,26 0 1,1 29.57,62.89 M60.84,72.79 A20,20 0 1,1 72.79,60.84 M61,41.88 A14,14 0 1,1 47,41.88 M50,60.93 A8,8 0 1,1 58,60.93' fill='none' stroke='%235B3FA0' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   /* "Visa stamp" world, same as the app: a passport security page, stamp inks on navy text.
@@ -50,7 +63,7 @@
     position: absolute; top: 8%; bottom: 8%; left: 50%; aspect-ratio: 1; transform: translateX(-50%);
     border-radius: 50%; border: 5px solid var(--purple); background: rgba(246,241,249,.94); padding: 34px;
     display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-    transition: background .15s, transform .15s;
+    transition: background .15s;
   }
   #drop::before { content: ""; position: absolute; inset: 14px; border-radius: 50%; border: 2px dashed var(--purple); pointer-events: none; }
   #drop.over { background: #e6dcf3; transform: translateX(-50%) scale(1.02); }
@@ -140,9 +153,18 @@
   details.fold > .body { padding: 0 20px 18px; }
   .linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--purple); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
   .mono { font-family: var(--mono); font-size: 13px; }
-  .card h4 { margin: 0 0 14px; font: 700 14px var(--narrow); text-transform: uppercase; letter-spacing: .1em; color: var(--purple); display: flex; align-items: center; gap: 8px; }
-  .card h4 .tag { font: 700 11px var(--narrow); color: var(--muted); border: 1.5px solid var(--outline); border-radius: 6px; padding: 1px 7px; }
+  .card h3, .card h4 { margin: 0 0 14px; font: 700 14px var(--narrow); text-transform: uppercase; letter-spacing: .1em; color: var(--purple); display: flex; align-items: center; gap: 8px; }
+  .card h3 .tag, .card h4 .tag { font: 700 11px var(--narrow); color: var(--muted); border: 1.5px solid var(--outline); border-radius: 6px; padding: 1px 7px; }
   .note { color: var(--muted); font-size: 13px; margin: 14px 0 0; }
+  .meta-box { margin-top: 20px; padding: 16px 20px; }
+  .meta-box .note:first-child { margin-top: 0; }
+  .meta-box details { margin-top: 12px; }
+  .store { display: flex; justify-content: center; margin: 18px 0 0; }
+  .store .badge { display: inline-flex; align-items: center; gap: 12px; background: var(--navy); color: #fff; border-radius: 12px; padding: 9px 18px 9px 14px; text-decoration: none; line-height: 1.15; }
+  .store .badge svg { flex: none; }
+  .store .badge small { display: block; font: 700 11px var(--narrow); text-transform: uppercase; letter-spacing: .1em; color: #c9bfe0; }
+  .store .badge b { display: block; font-size: 17px; }
+  .store .badge[aria-disabled="true"] { cursor: default; opacity: .92; border: 2px dashed #8f7bc4; }
   .ok-t { color: var(--mint); } .warn-t { color: var(--amber); } .fail-t { color: var(--danger); }
   .dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin-top: 16px; }
   .dgrid button { position: relative; padding: 0; border: 1px solid var(--outline); border-radius: 10px; overflow: hidden; background: var(--surface2); cursor: pointer; }
@@ -184,6 +206,16 @@
   <main>
     <h1 data-i18n="heroTitle"></h1>
     <p class="lead" data-i18n="heroLead"></p>
+    <!-- No store page exists yet: a non-clickable "coming soon" badge. When the app is live, turn this span into
+         <a href="the real dApp Store link"> and change the two texts; never link before the page is real. -->
+    <p class="store">
+      <span class="badge" aria-disabled="true">
+        <svg width="26" height="26" viewBox="24 24 60 60" aria-hidden="true">
+          <path d="M29.57,45.11 A26,26 0 1,1 29.57,62.89 M60.84,72.79 A20,20 0 1,1 72.79,60.84 M61,41.88 A14,14 0 1,1 47,41.88 M50,60.93 A8,8 0 1,1 58,60.93" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>
+        </svg>
+        <span><small data-i18n="storeSmall"></small><b data-i18n="storeBig"></b></span>
+      </span>
+    </p>
 
     <div class="stage">
       <section id="drop" aria-labelledby="dropTitle">
@@ -213,7 +245,7 @@
       <h2 data-i18n="useTitle"></h2>
       <div class="grid2">
         <div class="card">
-          <h4 data-i18n="useMine"></h4>
+          <h3 data-i18n="useMine"></h3>
           <ol class="steps">
             <li><i>1</i><b data-i18n="useM1t"></b><span data-i18n="useM1"></span></li>
             <li><i>2</i><b data-i18n="useM2t"></b><span data-i18n="useM2"></span></li>
@@ -221,7 +253,7 @@
           </ol>
         </div>
         <div class="card">
-          <h4 data-i18n="useTheirs"></h4>
+          <h3 data-i18n="useTheirs"></h3>
           <ol class="steps">
             <li><i>1</i><b data-i18n="useT1t"></b><span data-i18n="useT1"></span></li>
             <li><i>2</i><b data-i18n="useT2t"></b><span data-i18n="useT2"></span></li>
@@ -241,16 +273,18 @@
         <li class="card"><i>5</i><b data-i18n="how5t"></b><span data-i18n="how5"></span></li>
       </ol>
     </section>
-    <p class="note" data-i18n="privacy"></p>
+    <div class="card meta-box">
+      <p class="note" data-i18n="privacy"></p>
 
-    <details>
-      <summary data-i18n="advanced"></summary>
-      <p class="note" data-i18n="rpcHelp"></p>
-      <div class="rpc">
-        <label for="rpc" class="sr">RPC</label>
-        <input id="rpc" type="url" inputmode="url" placeholder="https://…" spellcheck="false" autocomplete="off">
-      </div>
-    </details>
+      <details>
+        <summary data-i18n="advanced"></summary>
+        <p class="note" data-i18n="rpcHelp"></p>
+        <div class="rpc">
+          <label for="rpc" class="sr">Custom Solana RPC URL</label>
+          <input id="rpc" type="url" inputmode="url" placeholder="https://…" aria-label="Custom Solana RPC URL" spellcheck="false" autocomplete="off">
+        </div>
+      </details>
+    </div>
   </main>
 </div>
 <footer>
@@ -310,6 +344,7 @@ const I18N = {
     heroLead: "Drop an Imprint proof: the photo and its .proof.json file, or a dossier's .zip. Everything is checked right here in your browser. Nothing is uploaded; only the transaction signature is looked up on Solana.",
     dropTitle: "Drop the files here",
     pick: "Choose files",
+    storeSmall: "Coming soon on the", storeBig: "Solana dApp Store",
     checking: "Checking…",
     needJson: "Add the .proof.json file that came with the photo.",
     badJson: "This file is not an Imprint proof.",
